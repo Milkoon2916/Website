@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>워크북 메이커 · 학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  nav{padding:24px 0; display:flex; align-items:center; gap:16px;}
+  nav a{color:var(--text-muted); text-decoration:none; font-size:13px;}
+  nav h1{font-size:20px; font-weight:800; margin:0;}
+
+  .gate{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; text-align:center; color:var(--text-muted);}
+  .gate a{color:var(--accent); font-weight:700;}
+
+  textarea{
+    width:100%; min-height:180px; padding:14px; border:1px solid var(--border-strong); border-radius:10px;
+    font-family:var(--font-body); font-size:14px; background:var(--surface); color:var(--text); resize:vertical;
+  }
+  .row{display:flex; gap:10px; margin-top:10px;}
+  button.btn{
+    padding:11px 22px; background:var(--accent); color:#fff; border:none; border-radius:8px;
+    font-family:var(--font-body); font-size:14.5px; font-weight:700; cursor:pointer;
+  }
+  button.btn:disabled{opacity:.5;}
+  .msg{font-size:13.5px; color:var(--danger); margin-top:10px;}
+  .loading{font-size:13.5px; color:var(--text-muted); margin-top:10px;}
+
+  .step-tabs{display:flex; gap:8px; margin:24px 0 16px;}
+  .step-tab{padding:8px 14px; border:1px solid var(--border); background:var(--surface); border-radius:8px; font-size:13px; cursor:pointer;}
+  .step-tab.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+
+  .block{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; font-size:14px; line-height:1.7;}
+  .block .ko{color:var(--text-muted); font-size:13px; margin-top:4px;}
+  .hint{font-size:12px; color:var(--text-faint); margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="/">← 홈으로</a><h1>워크북 메이커</h1></nav>
+
+  <div id="gate" class="gate">로그인이 필요해요. <a href="/">홈으로 가서 로그인하기</a></div>
+
+  <div id="content" style="display:none;">
+    <textarea id="passageInput" placeholder="영어 지문을 붙여넣으세요."></textarea>
+    <div class="row"><button class="btn" id="genBtn">워크북 만들기</button></div>
+    <div class="loading" id="loadingMsg" style="display:none;">Gemini가 워크북을 만드는 중이에요...</div>
+    <div class="msg" id="errorMsg"></div>
+
+    <div id="resultArea" style="display:none;">
+      <div class="step-tabs">
+        <div class="step-tab active" data-step="step1">1단계 해석</div>
+        <div class="step-tab" data-step="step2">2단계 빈칸</div>
+        <div class="step-tab" data-step="step3">3단계 순서</div>
+        <div class="step-tab" data-step="step4">4단계 언스크램블</div>
+      </div>
+      <div class="step-panel active" id="panel-step1"></div>
+      <div class="step-panel" id="panel-step2"></div>
+      <div class="step-panel" id="panel-step3"></div>
+      <div class="step-panel" id="panel-step4"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkAuth(){
+  const res = await fetch('/auth/me', {credentials:'include'});
+  if(res.ok){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  }
+}
+checkAuth();
+
+document.querySelectorAll('.step-tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.step).classList.add('active');
+  };
+});
+
+document.getElementById('genBtn').onclick = async () => {
+  const passage_text = document.getElementById('passageInput').value.trim();
+  const errorMsg = document.getElementById('errorMsg');
+  const loading = document.getElementById('loadingMsg');
+  errorMsg.textContent = '';
+  if(!passage_text){ errorMsg.textContent = '지문을 입력해주세요.'; return; }
+
+  document.getElementById('genBtn').disabled = true;
+  loading.style.display = 'block';
+  document.getElementById('resultArea').style.display = 'none';
+
+  try{
+    const res = await fetch('/api/workbook', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      body: JSON.stringify({passage_text})
+    });
+    if(!res.ok){ throw new Error((await res.json()).detail || '생성에 실패했어요.'); }
+    const data = await res.json();
+    render(data.result, data.material_id);
+    document.getElementById('resultArea').style.display = 'block';
+  }catch(e){
+    errorMsg.textContent = e.message;
+  }finally{
+    loading.style.display = 'none';
+    document.getElementById('genBtn').disabled = false;
+  }
+};
+
+function render(result, materialId){
+  if(materialId){
+    let dl = document.getElementById('pdfDownloadLink');
+    if(!dl){
+      dl = document.createElement('a');
+      dl.id = 'pdfDownloadLink';
+      dl.style.cssText = 'display:inline-block; margin-top:16px; padding:9px 18px; background:var(--accent); color:#fff; text-decoration:none; border-radius:8px; font-size:13.5px; font-weight:700;';
+      document.getElementById('resultArea').prepend(dl);
+    }
+    dl.href = `/api/materials/${materialId}/pdf`;
+    dl.textContent = 'PDF 다운로드';
+  }
+  const p1 = document.getElementById('panel-step1');
+  p1.innerHTML = (result.step1 || []).map(s => `<div class="block">[${s.num}] ${s.en}<div class="ko">${s.ko}</div></div>`).join('');
+
+  const p2 = document.getElementById('panel-step2');
+  p2.innerHTML = (result.step2 || []).map(s => `<div class="block">[${s.num}] ${s.blanked_en}<div class="hint">힌트: ${s.hint}</div></div>`).join('');
+
+  const p3 = document.getElementById('panel-step3');
+  p3.innerHTML = (result.step3 || []).map(s => `<div class="block"><strong>문단 ${s.paragraph}</strong><br>${(s.sentences||[]).map((x,i)=>`${i+1}. ${x}`).join('<br>')}</div>`).join('');
+
+  const p4 = document.getElementById('panel-step4');
+  p4.innerHTML = (result.step4 || []).map(s => `<div class="block">[${s.num}] ${(s.chunks||[]).join(' / ')}</div>`).join('');
+}
+</script>
+</body>
+</html>
