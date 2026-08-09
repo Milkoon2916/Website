@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_regular }}");
+    font-weight: 400;
+  }
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_bold }}");
+    font-weight: 700;
+  }
+
+  @page{
+    size: A4;
+    margin: 22mm 18mm;
+    @bottom-center{ content: counter(page) " / " counter(pages); font-family:"Nanum Gothic"; font-size:9px; color:#9A9A94; }
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Nanum Gothic", sans-serif; color:#1F1F1D; font-size:11px; line-height:1.65;
+    background:#FFFFFF; margin:0;
+  }
+
+  h1{font-size:18px; font-weight:700; margin:0 0 4px;}
+  .subtitle{font-size:10px; color:#6B6B66; margin:0 0 20px;}
+
+  .summary-box{background:#F6F6F4; border:1px solid #E3E3E0; border-radius:8px; padding:14px 16px; margin-bottom:18px;}
+  .summary-box h2{font-size:12px; margin:0 0 8px;}
+  .summary-box p{margin:0 0 6px; color:#3F4643;}
+
+  .sentence{border-bottom:1px solid #E3E3E0; padding:10px 0; page-break-inside:avoid;}
+  .sentence .en{font-size:11.5px; margin-bottom:4px;}
+  .sentence .num{color:#9A9A94; font-weight:700; margin-right:4px;}
+  .sentence .ko{font-size:10.5px; color:#6B6B66; margin-bottom:4px;}
+  .sentence .notes{font-size:9.5px; color:#9A9A94;}
+  .badge{
+    display:inline-block; font-size:8.5px; font-weight:700; padding:1px 7px; border-radius:10px;
+    background:#EEEFEC; color:#3F4643; margin-right:6px;
+  }
+
+  table.voca{width:100%; border-collapse:collapse; margin-top:8px; font-size:10px;}
+  table.voca th, table.voca td{padding:5px 7px; border-bottom:1px solid #E3E3E0; text-align:left;}
+  table.voca th{color:#6B6B66; font-weight:700;}
+</style>
+</head>
+<body>
+  <h1>{{ title or "지문분석" }}</h1>
+  <p class="subtitle">학습자료 제작소 · 지문분석기</p>
+
+  {% if result.summary %}
+  <div class="summary-box">
+    <h2>지문 요약</h2>
+    <p><strong>주제:</strong> {{ result.summary.theme }}</p>
+    <p><strong>흐름:</strong> {{ result.summary.flow }}</p>
+    <p>{{ result.summary.background }}</p>
+  </div>
+  {% endif %}
+
+  {% for s in result.sentences %}
+  <div class="sentence">
+    {% if s.badge %}<span class="badge">{{ s.badge }}</span>{% endif %}
+    <div class="en"><span class="num">[{{ s.num }}]</span>{% for t in s.tokens %}{{ t.text }} {% endfor %}</div>
+    <div class="ko">{{ s.translation }}</div>
+    <div class="notes">
+      {% for n in s.notes %}· {{ n.text or n.content }}<br>{% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  {% if result.vocabulary %}
+  <div class="summary-box">
+    <h2>핵심 어휘</h2>
+    <table class="voca">
+      <thead><tr><th>단어</th><th>뜻</th><th>유의어</th><th>반의어</th></tr></thead>
+      <tbody>
+        {% for v in result.vocabulary %}
+        <tr><td>{{ v.word }}</td><td>{{ v.meaning }}</td><td>{{ v.synonym }}</td><td>{{ v.antonym }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</body>
+</html>

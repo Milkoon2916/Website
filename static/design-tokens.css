@@ -1,0 +1,30 @@
+/*
+  디자인 토큰: 나눔고딕 + 뉴트럴톤
+  홈페이지(static/index.html)와 앞으로 만들 PDF 출력물(지문분석/워크북/OX)이
+  전부 이 파일의 색·폰트 값을 그대로 가져다 써서 톤을 통일함.
+*/
+:root{
+  /* 뉴트럴톤 팔레트 - 웜톤(크림)이나 원색 강조 없이 회색 계열로만 구성 */
+  --bg: #F6F6F4;
+  --surface: #FFFFFF;
+  --border: #E3E3E0;
+  --border-strong: #C9C9C4;
+  --text: #1F1F1D;
+  --text-muted: #6B6B66;
+  --text-faint: #9A9A94;
+  --accent: #3F4643;      /* 그래파이트 - 버튼/포인트에만 절제해서 사용 */
+  --accent-soft: #EEEFEC;
+  --danger: #8A3B32;      /* 오류 메시지용, 채도 낮춘 톤 */
+  --danger-soft: #F5EBE9;
+
+  --font-body: "Nanum Gothic", -apple-system, sans-serif;
+  --radius: 10px;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic:wght@400;700;800&display=swap');
+
+body{
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+}
