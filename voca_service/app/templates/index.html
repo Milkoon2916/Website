@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARA Vocab AI</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<div class="container">
+  <header class="page-header">
+    <div class="eyebrow">Vocabulary Lab</div>
+    <h1>ARA Vocab AI</h1>
+    <p>지문을 넣으면 핵심 어휘를 사전 형식으로 분석하고, 이어서 단어시험지와 정답지를 만들어 드려요.
+      본인의 Gemini 또는 OpenAI API 키로 작동하며, 키는 이 요청에만 쓰이고 서버에 저장되지 않습니다.</p>
+  </header>
+
+  <form id="analyzeForm" action="analyze" method="post">
+    <label>AI 제공자</label>
+    <div class="pill-group" id="providerPills">
+      <label class="pill active" data-provider="gemini">
+        <input type="radio" name="provider" value="gemini" checked> Google Gemini
+      </label>
+      <label class="pill" data-provider="openai">
+        <input type="radio" name="provider" value="openai"> OpenAI
+      </label>
+    </div>
+    <p class="hint" id="providerHint">
+      Gemini 키는 <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에서 무료로 발급받을 수 있어요.
+    </p>
+
+    <label>API 키</label>
+    <input type="password" id="apiKey" name="api_key" placeholder="여기에 API 키를 붙여넣으세요" required autocomplete="off">
+
+    <label>모델</label>
+    <select id="modelSelect"></select>
+    <input type="text" id="modelCustom" placeholder="모델명을 직접 입력하세요"
+           style="display:none;margin-top:8px;">
+    <input type="hidden" id="model" name="model">
+    <p class="hint" id="modelHint"></p>
+
+    <label>영어 지문</label>
+    <textarea name="passage" placeholder="여기에 분석할 영어 지문을 붙여넣으세요" required></textarea>
+
+    <div class="row">
+      <div>
+        <label>학년 / 수준</label>
+        <select name="level">
+          <option>중학교 1학년</option>
+          <option>중학교 2학년</option>
+          <option>중학교 3학년</option>
+          <option selected>고등학교 1학년</option>
+          <option>고등학교 2학년</option>
+          <option>고등학교 3학년 (수능)</option>
+        </select>
+      </div>
+      <div>
+        <label>추출할 단어 수</label>
+        <input type="number" name="count" value="10" min="1" max="30">
+      </div>
+    </div>
+
+    <label>분석 초점 (선택)</label>
+    <input type="text" name="focus" placeholder="예: 수능 빈출 어휘, 비유적 표현 위주">
+
+    <label>목표 문법 (선택 · 입력하면 어법 문제 3세트를 함께 만들어요)</label>
+    <input type="text" name="target_grammar" placeholder="예: 관계대명사, 분사구문, 가정법 도치">
+    <div class="row">
+      <div>
+        <label>어법 문제 난이도</label>
+        <select name="grammar_level">
+          <option>중등</option>
+          <option selected>고등</option>
+        </select>
+      </div>
+      <div></div>
+    </div>
+    <p class="hint">목표 문법을 입력하면 해당 문법을 다루는 어법 문제를 세트당 30문항 이상, 총 3세트로 만들어 드려요.
+      단어 분석까지 함께 진행되어 시간이 조금 더 걸릴 수 있어요 (1~2분).</p>
+
+    <button id="go" type="submit">지문 분석하기</button>
+    <div class="status" id="status" style="display:none;">AI가 지문을 분석하고 있습니다… (10~30초)</div>
+    <div class="err" id="err"></div>
+  </form>
+</div>
+
+<script>
+const GEMINI_MODELS = [
+  { value: "gemini-flash-latest", label: "Gemini Flash · 최신 (추천 · 자동 최신화)" },
+  { value: "gemini-pro-latest",   label: "Gemini Pro · 최신 (고품질 · 자동 최신화)" },
+  { value: "gemini-3.6-flash",    label: "Gemini 3.6 Flash (버전 고정 · 균형)" },
+  { value: "gemini-3.5-flash",    label: "Gemini 3.5 Flash (버전 고정 · 코딩/에이전트 특화)" },
+  { value: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash-Lite (버전 고정 · 가장 빠르고 저렴)" },
+  { value: "gemini-2.5-flash",    label: "Gemini 2.5 Flash (버전 고정 · 안정적인 예전 기본값)" },
+  { value: "__custom__",          label: "직접 입력…" },
+];
+const OPENAI_MODELS = [
+  { value: "gpt-4o-mini", label: "GPT-4o mini (추천 · 저렴)" },
+  { value: "gpt-4o",      label: "GPT-4o (고품질)" },
+  { value: "__custom__",  label: "직접 입력…" },
+];
+
+const modelSelect = document.getElementById('modelSelect');
+const modelCustom = document.getElementById('modelCustom');
+const modelHidden = document.getElementById('model');
+const modelHint = document.getElementById('modelHint');
+
+function populateModelSelect(provider){
+  const list = provider === 'openai' ? OPENAI_MODELS : GEMINI_MODELS;
+  modelSelect.innerHTML = '';
+  list.forEach(m => {
+    const opt = document.createElement('option');
+    opt.value = m.value;
+    opt.textContent = m.label;
+    modelSelect.appendChild(opt);
+  });
+  onModelSelectChange();
+}
+
+function onModelSelectChange(){
+  if (modelSelect.value === '__custom__') {
+    modelCustom.style.display = 'block';
+    modelHint.textContent = '';
+  } else {
+    modelCustom.style.display = 'none';
+    modelHint.textContent = '목록에 원하는 모델이 없거나 새 모델이 나왔다면 "직접 입력"을 선택하세요.';
+  }
+}
+modelSelect.addEventListener('change', onModelSelectChange);
+
+document.querySelectorAll('#providerPills .pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('#providerPills .pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    const provider = pill.dataset.provider;
+    const hint = document.getElementById('providerHint');
+    if (provider === 'openai') {
+      hint.innerHTML = 'OpenAI 키는 <a href="https://platform.openai.com/api-keys" target="_blank">OpenAI Platform</a>에서 발급받을 수 있어요.';
+    } else {
+      hint.innerHTML = 'Gemini 키는 <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>에서 무료로 발급받을 수 있어요.';
+    }
+    populateModelSelect(provider);
+  });
+});
+
+populateModelSelect('gemini');
+
+document.getElementById('analyzeForm').addEventListener('submit', (e) => {
+  modelHidden.value = modelSelect.value === '__custom__' ? modelCustom.value.trim() : modelSelect.value;
+  document.getElementById('go').disabled = true;
+  document.getElementById('status').style.display = 'block';
+  document.getElementById('err').style.display = 'none';
+});
+</script>
+</body>
+</html>

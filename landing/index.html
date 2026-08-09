@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARAXDNA</title>
+<style>
+  :root{
+    --ink:#1F2123;
+    --paper:#F7F7F5;
+    --rule:#E3E2DE;
+    --red:#4B4D52;
+    --red-dark:#26272A;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"NanumGothic","Nanum Gothic","Noto Sans CJK KR",sans-serif;
+    min-height:100vh;
+  }
+  header{
+    max-width:920px;
+    margin:0 auto;
+    padding:64px 24px 32px;
+  }
+  .eyebrow{
+    font-family:"Courier New",monospace;
+    font-size:13px;
+    letter-spacing:.12em;
+    color:var(--red-dark);
+    text-transform:uppercase;
+    margin:0 0 12px;
+  }
+  h1{
+    font-size:clamp(32px,5vw,52px);
+    line-height:1.15;
+    margin:0 0 16px;
+    font-weight:700;
+  }
+  p.lead{
+    font-size:18px;
+    line-height:1.7;
+    color:#3c4553;
+    max-width:640px;
+    margin:0;
+  }
+  main{
+    max-width:920px;
+    margin:0 auto;
+    padding:8px 24px 96px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:28px;
+  }
+  @media (max-width:720px){
+    main{grid-template-columns:1fr;}
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:2px;
+    padding:32px 28px;
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    text-decoration:none;
+    color:var(--ink);
+    transition:transform .15s ease, box-shadow .15s ease;
+    box-shadow:0 1px 0 var(--rule);
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 10px 24px rgba(27,36,48,0.12);
+  }
+  .stamp{
+    align-self:flex-start;
+    font-family:"Courier New",monospace;
+    font-size:11px;
+    letter-spacing:.08em;
+    border:1.5px solid var(--red);
+    color:var(--red);
+    padding:3px 8px;
+    border-radius:2px;
+    transform:rotate(-3deg);
+    margin-bottom:20px;
+    text-transform:uppercase;
+  }
+  .card h2{
+    font-size:24px;
+    margin:0 0 12px;
+  }
+  .card p{
+    font-size:15px;
+    line-height:1.65;
+    color:#4a5261;
+    margin:0 0 24px;
+    flex-grow:1;
+  }
+  .go{
+    font-family:"Courier New",monospace;
+    font-size:14px;
+    color:var(--red-dark);
+    font-weight:bold;
+  }
+  .go::after{
+    content:" →";
+  }
+  footer{
+    max-width:920px;
+    margin:0 auto;
+    padding:0 24px 48px;
+    font-family:"Courier New",monospace;
+    font-size:12px;
+    color:#7a8290;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Teacher's Desk</p>
+    <h1>ARAXDNA</h1>
+    <p class="lead">지문 하나로 구문분석 PDF, O/X 워크북, 단어시험지, 단어장까지 바로 만듭니다.
+      각자 자신의 API 키로 사용하는 도구이기 때문에, 운영자에게 별도 비용이 발생하지 않습니다.</p>
+  </header>
+  <main style="grid-template-columns:1fr;">
+    <a class="card" href="/all-in-one/" style="border-color:var(--red);">
+      <span class="stamp">최신 · 전부 한번에</span>
+      <h2>지문 하나로 5개 도구 전부 한번에</h2>
+      <p>지문을 최대 5개까지 넣고 버튼 한 번만 누르면 구문분석 PDF, O/X 워크북, 단어시험지 워크북, VOCA 어휘 분석,
+        어법 문제(목표 문법 3세트)까지 지문별로 동시에 만들어집니다. 원하는 도구만 체크해서 골라 쓸 수도 있습니다. Gemini API 키 하나만 있으면 됩니다.</p>
+      <span class="go">5개 도구 만들러 가기</span>
+    </a>
+  </main>
+  <footer>index — one desk, one door.</footer>
+</body>
+</html>
