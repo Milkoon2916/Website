@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} - ARA Vocab AI</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<div class="container">
+  <header class="page-header">
+    <div class="eyebrow">Vocabulary Lab · Result</div>
+    <h1>{{TITLE}}</h1>
+    <p>{{LEVEL}} 대상으로 뽑은 핵심 어휘예요. 마음에 들면 아래에서 바로 단어시험지를 만들 수 있어요.</p>
+  </header>
+
+  <div class="toolbar">
+    <form action="download/vocabulary/docx" method="post">
+      <input type="hidden" name="data">
+      <button class="secondary" type="submit">📄 단어장 DOCX</button>
+    </form>
+    <form action="download/vocabulary/pdf" method="post">
+      <input type="hidden" name="data">
+      <button class="secondary" type="submit">📕 단어장 PDF</button>
+    </form>
+    <a class="link-button" href="./">← 새 지문 분석하기</a>
+  </div>
+
+  <main>
+{{VOCABULARY}}
+  </main>
+
+  <header class="page-header" style="margin-top:48px;">
+    <div class="eyebrow">Next step</div>
+    <h1 style="font-size:26px;">단어시험지 만들기</h1>
+    <p>위 어휘로 문제 유형과 난이도를 골라 시험지를 생성해요.</p>
+  </header>
+
+  <form id="worksheetForm" action="generate-worksheet" method="post">
+    <input type="hidden" name="data" id="worksheetData">
+    <input type="hidden" name="provider" value="{{PROVIDER}}">
+    <input type="hidden" name="api_key" value="{{API_KEY}}">
+    <input type="hidden" name="model" value="{{MODEL}}">
+
+    <div class="row">
+      <div>
+        <label>문제 유형</label>
+        <select name="worksheet_type">
+          <option value="혼합형" selected>혼합형</option>
+          <option value="영어 → 한국어 뜻">영어 → 한국어 뜻</option>
+          <option value="한국어 뜻 → 영어">한국어 뜻 → 영어</option>
+          <option value="유의어 객관식">유의어 객관식</option>
+          <option value="반의어 객관식">반의어 객관식</option>
+          <option value="빈칸(문맥) 채우기">빈칸(문맥) 채우기</option>
+        </select>
+      </div>
+      <div>
+        <label>난이도</label>
+        <select name="difficulty">
+          <option>하</option>
+          <option selected>중상</option>
+          <option>상</option>
+        </select>
+      </div>
+    </div>
+
+    <label>문항 수</label>
+    <input type="number" name="count" value="20" min="1" max="40">
+
+    <button id="go" type="submit">단어시험지 생성하기</button>
+    <div class="status" id="status" style="display:none;">문제를 만들고 있습니다… (10~30초)</div>
+  </form>
+
+  {{GRAMMAR_SECTION}}
+</div>
+
+<script>
+const data = {{DATA}};
+document.querySelectorAll('input[name="data"]').forEach(input => input.value = JSON.stringify(data));
+document.getElementById('worksheetForm').addEventListener('submit', () => {
+  document.getElementById('go').disabled = true;
+  document.getElementById('status').style.display = 'block';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 14mm 12mm 16mm 12mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans CJK KR", "Noto Sans", sans-serif;
+    font-size: 10.3pt;
+    color: #222;
+    line-height: 1.55;
+  }
+  .passage-header { border-bottom: 3px solid #17324d; padding-bottom: 4mm; margin-bottom: 5mm; }
+  .passage-tag { display:inline-block; background:#17324d; color:#fff; font-size:8.5pt; padding:2px 8px; border-radius:3px; float:right; }
+  .passage-title-en { font-size:17pt; font-weight:700; color:#17324d; margin:0; }
+  .passage-title-kr { font-size:10pt; color:#666; margin-top:2px; }
+  .legend { font-size:8pt; color:#555; margin-top:3mm; }
+  .legend span { margin-right:10px; }
+  .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+
+  /* 문장 1개 + 그 문장의 노트를 같은 <tr> 안에 나란히 배치.
+     같은 행의 두 셀은 항상 같은 줄에서 시작하므로 번역/노트 길이가 달라도
+     문장 번호와 노트가 어긋나지 않는다. */
+  table.layout { width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.layout td.main-col { width:68%; vertical-align:top; padding-right:6mm; padding-bottom:6mm; }
+  table.layout td.note-col { width:32%; vertical-align:top; border-left:1px solid #e3e3e3; padding-left:4mm; padding-bottom:6mm; }
+  table.layout tr { page-break-inside: avoid; }
+
+  .sentence-block { }
+  .sent-num { display:inline-block; background:#17324d; color:#fff; width:16px; height:16px; text-align:center; line-height:16px; font-size:8.5pt; border-radius:50%; margin-right:5px; }
+  .badge { display:inline-block; font-size:7.5pt; font-weight:700; color:#fff; padding:1.5px 6px; border-radius:3px; margin-right:4px; vertical-align:middle; }
+  .badge-topic { background:#17324d; }
+  .badge-insert { background:#2e9e6b; }
+  .badge-target { background:#e08a1e; }
+  .target-grammar-tag { display:inline-block; background:#fff2a8; color:#7a5c00; font-size:8.5pt; padding:2px 8px; border-radius:3px; margin-top:3mm; }
+  .sent-en { font-size:10.3pt; }
+  .sent-kr { font-size:9.3pt; color:#555; background:#f5f7f9; border-left:3px solid #b9c6d1; padding:2mm 3mm; margin-top:2mm; }
+
+  .tag { display:inline-block; text-align:center; vertical-align:top; margin:0 1px; }
+  .tag .w { display:block; white-space:nowrap; }
+  .tag .c { display:block; font-size:6.6pt; color:#8a8a8a; white-space:nowrap; line-height:1.2; margin-top:0px; }
+  .g { color:#d3222a; font-weight:600; }
+  .v { color:#2266cc; font-weight:600; }
+  .gv { color:#8b3fa0; font-weight:600; }
+  .conn { text-decoration: underline; text-decoration-color:#999; }
+  .hl { background:#fff2a8; }
+
+  .note-box { border:1px solid #e3e3e3; border-radius:4px; margin-bottom:3mm; overflow:hidden; }
+  .note-box:last-child { margin-bottom:0; }
+  .note-label { font-size:7.6pt; font-weight:700; color:#fff; padding:1.5px 6px; display:inline-block; border-bottom-right-radius:6px; }
+  .note-body { font-size:8.3pt; color:#333; padding:2mm 3mm; }
+  .lbl-comprehension { background:#3a7bd5; }
+  .lbl-grammar { background:#d3222a; }
+  .lbl-blank { background:#e08a1e; }
+  .lbl-writing { background:#2e9e6b; }
+  .lbl-implication { background:#8b3fa0; }
+  .lbl-theme { background:#17324d; }
+
+  .flow-section { margin-top:8mm; border:1px solid #d8dde1; border-radius:5px; overflow:hidden; }
+  .flow-row { display:table; width:100%; border-top:1px solid #d8dde1; }
+  .flow-row:first-child { border-top:none; }
+  .flow-key { display:table-cell; width:16mm; background:#17324d; color:#fff; font-size:8.5pt; font-weight:700; text-align:center; vertical-align:middle; padding:2mm; }
+  .flow-val { display:table-cell; font-size:8.6pt; padding:2mm 3mm; vertical-align:middle; }
+
+  .vocab-section { margin-top:6mm; }
+  .vocab-title { font-size:9.5pt; font-weight:700; color:#17324d; margin-bottom:2mm; }
+  table.vocab-table { width:100%; border-collapse:collapse; font-size:8.3pt; table-layout:fixed; }
+  table.vocab-table th, table.vocab-table td { border:1px solid #d8dde1; padding:1.8mm 2.5mm; vertical-align:top; word-wrap:break-word; }
+  table.vocab-table th { background:#17324d; color:#fff; font-weight:700; text-align:left; }
+  table.vocab-table col.c-word { width:20%; }
+  table.vocab-table col.c-meaning { width:22%; }
+  table.vocab-table col.c-syn { width:29%; }
+  table.vocab-table col.c-ant { width:29%; }
+  table.vocab-table tr:nth-child(even) td { background:#f7f9fa; }
+  .vocab-word { font-weight:700; }
+  .vocab-dash { color:#aaa; }
+  .vocab-footnote { font-size:7pt; color:#999; margin-top:1.5mm; text-align:right; }
+
+  .new-page { page-break-before: always; }
+</style>
+</head>
+<body>
+
+{% for p in passages %}
+<div class="{{ 'new-page' if not loop.first else '' }}">
+
+<div class="passage-header">
+  <span class="passage-tag">지문 {{ p.passage_index }}</span>
+  <p class="passage-title-en">{{ p.title_en }}</p>
+  <p class="passage-title-kr">{{ p.title_kr }}</p>
+  <div class="legend">
+    <span><i class="sw" style="background:#d3222a"></i>문법</span>
+    <span><i class="sw" style="background:#2266cc"></i>어휘</span>
+    <span><i class="sw" style="background:#8b3fa0"></i>문법+어휘</span>
+    <span><i class="sw" style="background:#999;text-decoration:underline"></i>연결어</span>
+    <span><i class="sw" style="background:#fff2a8;border:1px solid #ccc"></i>형광펜</span>
+  </div>
+  {% if p.target_grammar %}<div class="target-grammar-tag">🎯 목표 어법: {{ p.target_grammar }}</div>{% endif %}
+</div>
+
+<table class="layout">
+{% for s in p.sentences %}
+<tr>
+<td class="main-col">
+  <div class="sentence-block">
+    <div class="sent-en">
+      <span class="sent-num">{{ s.num }}</span>
+      {% if s.badge == "topic" %}<span class="badge badge-topic">주제문</span>{% endif %}
+      {% if s.badge == "insert" %}<span class="badge badge-insert">문장삽입</span>{% endif %}
+      {% if s.badge == "target" %}<span class="badge badge-target">목표 어법</span>{% endif %}
+      {% for t in s.tokens -%}
+        {% if t.type == "text" %}{{ t.text }}
+        {% elif t.type == "tag" %}<span class="tag"><span class="w {{ t.tag_class }}">{{ t.text }}</span><span class="c">{{ t.caption }}</span></span>
+        {% elif t.type == "conn" %}<span class="conn">{{ t.text }}</span>
+        {% elif t.type == "hl" %}<span class="hl">{{ t.text }}</span>
+        {% endif -%}
+      {% endfor %}
+    </div>
+    <div class="sent-kr">{{ s.translation }}</div>
+  </div>
+</td>
+<td class="note-col">
+  {% for n in s.notes %}
+  <div class="note-box">
+    <div class="note-label lbl-{{ n.category }}">{{ s.num }}번 {{ note_labels[n.category] }}</div>
+    <div class="note-body">{{ n.body }}</div>
+  </div>
+  {% endfor %}
+</td>
+</tr>
+{% endfor %}
+</table>
+
+<div class="flow-section">
+  <div class="flow-row"><div class="flow-key">주제</div><div class="flow-val">{{ p.summary.theme }}</div></div>
+  <div class="flow-row"><div class="flow-key">흐름</div><div class="flow-val">{{ p.summary.flow }}</div></div>
+  <div class="flow-row"><div class="flow-key">배경지식</div><div class="flow-val">{{ p.summary.background }}</div></div>
+</div>
+
+{% if p.vocabulary %}
+<div class="vocab-section">
+  <div class="vocab-title">📘 핵심 어휘 &amp; 유의어·반의어</div>
+  <table class="vocab-table">
+    <colgroup>
+      <col class="c-word"><col class="c-meaning"><col class="c-syn"><col class="c-ant">
+    </colgroup>
+    <thead>
+      <tr><th>단어</th><th>뜻</th><th>유의어</th><th>반의어</th></tr>
+    </thead>
+    <tbody>
+      {% for v in p.vocabulary %}
+      <tr>
+        <td class="vocab-word">{{ v.word }}</td>
+        <td>{{ v.meaning }}</td>
+        <td>{{ v.synonym if v.synonym else "" }}{% if not v.synonym %}<span class="vocab-dash">-</span>{% endif %}</td>
+        <td>{{ v.antonym if v.antonym else "" }}{% if not v.antonym %}<span class="vocab-dash">-</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="vocab-footnote">※ 유의어·반의어는 Datamuse(WordNet 기반) 사전으로 교차 검증했습니다.</div>
+</div>
+{% endif %}
+
+</div>
+{% endfor %}
+
+</body>
+</html>

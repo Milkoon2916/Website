@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{TITLE}} - ARA Vocab AI</title>
+<link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+<div class="container">
+<header class="page-header">
+    <div class="eyebrow">WORKSHEET GENERATOR</div>
+    <h1>{{TITLE}}</h1>
+    <p>학생용 시험지와 정답지를 DOCX/PDF로 다운로드할 수 있습니다.</p>
+</header>
+
+<div class="toolbar">
+    <form action="download/worksheet/docx" method="post">
+        <input type="hidden" name="data">
+        <input type="hidden" name="worksheet">
+        <input type="hidden" name="answer_key" value="false">
+        <button class="secondary" type="submit">📄 시험지 DOCX</button>
+    </form>
+
+    <form action="download/worksheet/pdf" method="post">
+        <input type="hidden" name="data">
+        <input type="hidden" name="worksheet">
+        <input type="hidden" name="answer_key" value="false">
+        <button class="secondary" type="submit">📕 시험지 PDF</button>
+    </form>
+
+    <form action="download/worksheet/docx" method="post">
+        <input type="hidden" name="data">
+        <input type="hidden" name="worksheet">
+        <input type="hidden" name="answer_key" value="true">
+        <button class="primary" type="submit">✅ 정답지 DOCX</button>
+    </form>
+
+    <form action="download/worksheet/pdf" method="post">
+        <input type="hidden" name="data">
+        <input type="hidden" name="worksheet">
+        <input type="hidden" name="answer_key" value="true">
+        <button class="primary" type="submit">✅ 정답지 PDF</button>
+    </form>
+
+    <a class="link-button" href="./">← 처음으로</a>
+</div>
+
+<main class="worksheet">
+{{QUESTIONS}}
+</main>
+</div>
+
+<script>
+const data = {{DATA}};
+const worksheet = {{WORKSHEET}};
+document.querySelectorAll('input[name="data"]').forEach(input => input.value = JSON.stringify(data));
+document.querySelectorAll('input[name="worksheet"]').forEach(input => input.value = JSON.stringify(worksheet));
+</script>
+</body>
+</html>
