@@ -30,7 +30,12 @@ router = APIRouter(prefix="/api", tags=["generate"])
 class GenerateRequest(BaseModel):
     passage_text: str
     title: str | None = None
+    passage_number: str | None = None  # 지문번호 — 입력하면 시험지 맨 위에 표시됨
     target_grammar: str | None = None  # 지문분석 전용, 나머지는 무시됨
+
+
+class UpdateLogoRequest(BaseModel):
+    academy_logo: str | None = None  # data URL(base64), 빈 값이면 로고 제거
 
 
 async def _get_teacher_gemini(teacher_id: int, db):
@@ -41,6 +46,17 @@ async def _get_teacher_gemini(teacher_id: int, db):
     return decrypt_api_key(teacher.gemini_api_key_encrypted), teacher.gemini_model
 
 
+@router.post("/academy-logo")
+def update_academy_logo(
+    body: UpdateLogoRequest,
+    teacher_id: int = Depends(get_current_teacher_id),
+    db=Depends(get_db),
+):
+    """학원 로고를 한 번 등록해두면 이후 생성하는 모든 지문분석/워크북/OX PDF 상단에 자동으로 붙는다."""
+    db.update_teacher_logo(teacher_id, body.academy_logo)
+    return {"ok": True}
+
+
 @router.post("/passage-analysis")
 async def generate_analysis(
     body: GenerateRequest,
@@ -48,7 +64,7 @@ async def generate_analysis(
     db=Depends(get_db),
 ):
     api_key, model = await _get_teacher_gemini(teacher_id, db)
-    passage = db.create_passage(teacher_id, body.passage_text, body.title)
+    passage = db.create_passage(teacher_id, body.passage_text, body.title, body.passage_number)
 
     system_prompt = build_analysis_prompt()
     user_message = build_analysis_user_message(body.passage_text, body.target_grammar)
@@ -65,7 +81,7 @@ async def generate_workbook(
     db=Depends(get_db),
 ):
     api_key, model = await _get_teacher_gemini(teacher_id, db)
-    passage = db.create_passage(teacher_id, body.passage_text, body.title)
+    passage = db.create_passage(teacher_id, body.passage_text, body.title, body.passage_number)
 
     user_message = build_workbook_user_message(body.passage_text)
     result = await call_gemini_json(api_key, model or WORKBOOK_MODEL, WORKBOOK_SYSTEM_PROMPT, user_message)
@@ -81,7 +97,7 @@ async def generate_ox(
     db=Depends(get_db),
 ):
     api_key, model = await _get_teacher_gemini(teacher_id, db)
-    passage = db.create_passage(teacher_id, body.passage_text, body.title)
+    passage = db.create_passage(teacher_id, body.passage_text, body.title, body.passage_number)
 
     user_message = build_ox_user_message(body.passage_text)
     result = await call_gemini_json(api_key, model or OX_MODEL, OX_SYSTEM_PROMPT, user_message)
@@ -108,13 +124,16 @@ def download_material_pdf(material_id: int, teacher_id: int = Depends(get_curren
     content = json.loads(material.content)
     passage = db.get_passage(material.passage_id, teacher_id)
     title = (passage.title if passage else None) or "학습자료"
+    passage_number = (passage.passage_number if passage else None) or ""
+    teacher = db.get_teacher(teacher_id)
+    academy_logo = (teacher.academy_logo if teacher else None) or ""
 
     if material.type == "analysis":
-        pdf_bytes = render_analysis_pdf(content, title=title)
+        pdf_bytes = render_analysis_pdf(content, title=title, passage_number=passage_number, academy_logo=academy_logo)
     elif material.type == "workbook":
-        pdf_bytes = render_workbook_pdf(content, title=title)
+        pdf_bytes = render_workbook_pdf(content, title=title, passage_number=passage_number, academy_logo=academy_logo)
     elif material.type == "ox":
-        pdf_bytes = render_ox_pdf(content, title=title)
+        pdf_bytes = render_ox_pdf(content, title=title, passage_number=passage_number, academy_logo=academy_logo)
     else:
         raise HTTPException(status_code=400, detail="이 자료 유형은 아직 PDF 다운로드를 지원하지 않아요.")
 

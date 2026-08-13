@@ -13,19 +13,40 @@
   *{box-sizing:border-box;}
   body{font-family:"Nanum Gothic", sans-serif; color:#1F1F1D; font-size:11px; line-height:1.65; margin:0;}
 
+  .doc-header-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .doc-logo{ max-height:14mm; max-width:40mm; object-fit:contain; }
+  .passage-number{
+    display:inline-block; font-size:9.5px; font-weight:700; color:#3F4643;
+    background:#EEEFEC; border-radius:4px; padding:2px 9px; margin-bottom:4px;
+  }
+
   h1{font-size:18px; font-weight:700; margin:0 0 4px;}
   .subtitle{font-size:10px; color:#6B6B66; margin:0 0 20px;}
   h2.section{font-size:13px; font-weight:700; margin:20px 0 10px;}
 
-  .item{border:1px solid #E3E3E0; border-radius:6px; padding:9px 12px; margin-bottom:7px;
-    display:flex; justify-content:space-between; gap:12px; page-break-inside:avoid;}
+  .item{border:1px solid #E3E3E0; border-radius:6px; padding:9px 12px; margin-bottom:7px; page-break-inside:avoid;}
   .num{color:#9A9A94; font-weight:700; margin-right:4px;}
-  .answer{font-size:9px; font-weight:700; padding:1px 8px; border-radius:10px; flex-shrink:0;}
-  .answer.true{background:#E6ECE1; color:#2F5233;}
-  .answer.false{background:#F5EBE9; color:#8A3B32;}
+
+  /* 정답지 — 항상 문서 맨 뒤, 새 페이지에서 시작 (문항 옆에 바로 안 보이게) */
+  .answer-key{ page-break-before:always; }
+  .answer-key h2{ font-size:16px; border-bottom:2px solid #1F1F1D; padding-bottom:6px; margin-bottom:14px; }
+  .answer-key .ak-item{
+    display:flex; justify-content:space-between; gap:12px; padding:6px 10px;
+    border-bottom:1px dashed #E3E3E0; font-size:10.5px;
+  }
+  .answer-key .ak-answer{
+    font-weight:700; color:#3F4643; background:#EEEFEC; border-radius:10px;
+    padding:1px 9px; flex-shrink:0;
+  }
 </style>
 </head>
 <body>
+  {% if passage_number or academy_logo %}
+  <div class="doc-header-top">
+    <div>{% if passage_number %}<span class="passage-number">지문 {{ passage_number }}</span>{% endif %}</div>
+    {% if academy_logo %}<img class="doc-logo" src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  </div>
+  {% endif %}
   <h1>{{ title or "O/X 리딩 워크북" }}</h1>
   <p class="subtitle">학습자료 제작소 · O/X 리딩 워크북</p>
 
@@ -33,7 +54,6 @@
   {% for it in result.korean_ox %}
   <div class="item">
     <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>
-    <span class="answer {{ 'true' if it.answer else 'false' }}">{{ 'O' if it.answer else 'X' }}</span>
   </div>
   {% endfor %}
 
@@ -41,8 +61,23 @@
   {% for it in result.english_ox %}
   <div class="item">
     <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>
-    <span class="answer {{ 'true' if it.answer else 'false' }}">{{ 'O' if it.answer else 'X' }}</span>
   </div>
   {% endfor %}
+
+  <section class="answer-key">
+    <h2>정답 (교사용)</h2>
+    {% for it in result.korean_ox %}
+    <div class="ak-item">
+      <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>
+      <span class="ak-answer">{{ 'O' if it.answer else 'X' }}</span>
+    </div>
+    {% endfor %}
+    {% for it in result.english_ox %}
+    <div class="ak-item">
+      <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>
+      <span class="ak-answer">{{ 'O' if it.answer else 'X' }}</span>
+    </div>
+    {% endfor %}
+  </section>
 </body>
 </html>

@@ -14,6 +14,12 @@
     font-family:"NanumGothic","Nanum Gothic","Noto Sans CJK KR",sans-serif;
     font-size:10.5px; line-height:1.55;
   }
+  .doc-header-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .doc-logo{ max-height:14mm; max-width:40mm; object-fit:contain; }
+  .passage-number{
+    display:inline-block; font-size:9.5px; font-weight:700; color:var(--pink-dark);
+    background:var(--pink-pale); border-radius:4px; padding:2px 9px; margin-bottom:3px;
+  }
   .doc-header{ margin-bottom:14px; border-bottom:2px solid var(--pink); padding-bottom:10px; }
   .eyebrow{
     font-family:"IBM Plex Mono","Noto Sans Mono",monospace;
@@ -23,7 +29,6 @@
   h1{ font-size:20px; font-weight:800; margin:0 0 4px; letter-spacing:-.01em; }
   .subtitle{ font-size:10.5px; color:var(--ink-soft); margin:0 0 6px; }
   .nameline{ font-size:10.5px; color:var(--ink-soft); margin:0; }
-  {% if answer_key %}.nameline{ display:none; }{% endif %}
 
   .set-section{ margin-top:6px; }
   .set-section.not-first{ page-break-before:always; break-before:page; }
@@ -57,18 +62,30 @@
 
   .writeline{ border-bottom:1px solid var(--ink-soft); height:20px; margin-top:5px; }
 
-  .answer-block{
-    margin-top:5px; padding:6px 9px;
-    background:var(--pink-pale); border-left:3px solid var(--pink); border-radius:0 6px 6px 0;
-    font-size:9.5px; line-height:1.5;
+  /* 정답지 — 항상 문서 맨 뒤, 새 페이지에서 시작 (별도 파일로 안 나가고 같은 문서 안에 붙는다) */
+  .answer-key{ page-break-before:always; break-before:page; }
+  .answer-key h2{ border-bottom:2px solid var(--pink-dark); padding-bottom:6px; font-size:16px; }
+  .answer-key .ak-set{ margin-top:14px; }
+  .answer-key .ak-set-title{
+    font-family:"IBM Plex Mono","Noto Sans Mono",monospace; font-size:10.5px; font-weight:700;
+    color:var(--pink-dark); margin-bottom:6px;
   }
-  .answer-block .ans{ font-weight:700; color:var(--pink-dark); }
-  .answer-block .exp{ color:var(--ink-soft); margin-top:2px; }
+  .answer-key .ak-item{
+    padding:5px 9px; margin-bottom:4px;
+    background:var(--pink-pale); border-left:3px solid var(--pink); border-radius:0 6px 6px 0;
+    font-size:9.5px; line-height:1.5; break-inside:avoid;
+  }
+  .answer-key .ans{ font-weight:700; color:var(--pink-dark); }
+  .answer-key .exp{ color:var(--ink-soft); margin-top:2px; }
 </style>
 </head>
 <body>
+  <div class="doc-header-top">
+    <div>{% if passage_number %}<span class="passage-number">지문 {{ passage_number }}</span>{% endif %}</div>
+    {% if academy_logo %}<img class="doc-logo" src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  </div>
   <div class="doc-header">
-    <p class="eyebrow">ARA Vocab AI &middot; Grammar Practice {% if answer_key %}&middot; 정답지{% endif %}</p>
+    <p class="eyebrow">ARA Vocab AI &middot; Grammar Practice</p>
     <h1>ARA GRAMMAR PRACTICE</h1>
     <p class="subtitle">목표 문법: {{ target_grammar }} &middot; {{ level }}</p>
     <p class="nameline">Name: ______________________________&nbsp;&nbsp;&nbsp;&nbsp;Date: ________________</p>
@@ -85,12 +102,7 @@
         {% if q.prompt %}<div class="prompt">{{ q.prompt }}</div>{% endif %}
         {% if q.prompt_secondary %}<div class="prompt plain">{{ q.prompt_secondary }}</div>{% endif %}
 
-        {% if answer_key %}
-          <div class="answer-block">
-            <span class="ans">정답: {{ q.answer }}</span>
-            <div class="exp">해설: {{ q.explanation }}</div>
-          </div>
-        {% elif q.type == 'short' %}
+        {% if q.type == 'short' %}
           <div class="writeline"></div>
         {% elif q.choices %}
           <div class="choices {% if q.choices|length > 2 %}grid2{% endif %}">
@@ -102,5 +114,22 @@
     </div>
   </section>
   {% endfor %}
+
+  {% if sets %}
+  <section class="answer-key">
+    <h2>정답 (교사용)</h2>
+    {% for s in sets %}
+    <div class="ak-set">
+      <div class="ak-set-title">SET {{ s.set_number }}</div>
+      {% for q in s.questions %}
+      <div class="ak-item">
+        <span class="ans">{{ q.number }}. 정답: {{ q.answer }}</span>
+        <div class="exp">해설: {{ q.explanation }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
 </body>
 </html>

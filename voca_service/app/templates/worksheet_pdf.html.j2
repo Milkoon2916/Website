@@ -14,6 +14,12 @@
     font-family:"NanumGothic","Nanum Gothic","Noto Sans CJK KR",sans-serif;
     font-size:12px; line-height:1.65;
   }
+  .doc-header-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+  .doc-logo{ max-height:14mm; max-width:40mm; object-fit:contain; }
+  .passage-number{
+    display:inline-block; font-size:9.5px; font-weight:700; color:var(--pink-dark);
+    background:var(--pink-pale); border-radius:4px; padding:2px 9px; margin-bottom:3px;
+  }
   .doc-header{ margin-bottom:14px; border-bottom:2px solid var(--pink); padding-bottom:10px; }
   .eyebrow{
     font-family:"IBM Plex Mono","Noto Sans Mono",monospace;
@@ -23,7 +29,6 @@
   h1{ font-size:22px; font-weight:900; margin:0 0 4px; letter-spacing:-.01em; }
   .subtitle{ font-size:11px; color:var(--ink-soft); margin:0 0 10px; }
   .nameline{ font-size:11px; color:var(--ink-soft); margin:0; }
-  {% if answer_key %}.nameline{ display:none; }{% endif %}
 
   .question{
     padding:11px 0; border-bottom:1.2px dashed var(--rule);
@@ -35,16 +40,25 @@
     background:var(--pink-pale); color:var(--pink-dark); border-radius:6px;
     font-weight:700; font-size:11px;
   }
-  .answer{ color:var(--pink-dark); font-weight:700; }
   .choices{
     margin-top:8px; font-size:11.5px; color:var(--ink); line-height:1.8;
     display:flex; flex-direction:column; gap:3px; padding-left:26px;
   }
+
+  /* 정답지 — 항상 문서 맨 뒤, 새 페이지에서 시작 */
+  .answer-key{ page-break-before:always; break-before:page; }
+  .answer-key h2{ border-bottom:2px solid var(--pink-dark); padding-bottom:6px; font-size:16px; margin-bottom:10px; }
+  .answer-key .ak-item{ font-size:11.5px; padding:6px 0; border-bottom:1px dashed var(--rule); }
+  .answer-key .answer{ color:var(--pink-dark); font-weight:700; }
 </style>
 </head>
 <body>
+  <div class="doc-header-top">
+    <div>{% if passage_number %}<span class="passage-number">지문 {{ passage_number }}</span>{% endif %}</div>
+    {% if academy_logo %}<img class="doc-logo" src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  </div>
   <div class="doc-header">
-    <p class="eyebrow">ARA Vocab AI {% if answer_key %}&middot; 정답지{% endif %}</p>
+    <p class="eyebrow">ARA Vocab AI</p>
     <h1>ARA VOCABULARY TEST</h1>
     <p class="subtitle">{{ title }}</p>
     <p class="nameline">Name: ______________________________&nbsp;&nbsp;&nbsp;&nbsp;Date: ________________</p>
@@ -53,14 +67,24 @@
   {% for q in questions %}
   <div class="question">
     <span class="num">{{ q.number }}</span>{{ q.question }}
-    {% if answer_key %}
-      <span class="answer">&nbsp;&rarr;&nbsp;{{ q.answer }}</span>
-    {% elif q.choices %}
+    {% if q.choices %}
       <div class="choices">
         {% for c in q.choices %}<span>{{ ['A','B','C','D','E','F'][loop.index0] }}. {{ c }}</span>{% endfor %}
       </div>
     {% endif %}
   </div>
   {% endfor %}
+
+  {% if questions %}
+  <section class="answer-key">
+    <h2>정답 (교사용)</h2>
+    {% for q in questions %}
+    <div class="ak-item">
+      <span class="num">{{ q.number }}</span>{{ q.question }}
+      <span class="answer">&nbsp;&rarr;&nbsp;{{ q.answer }}</span>
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
 </body>
 </html>

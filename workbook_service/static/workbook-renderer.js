@@ -138,6 +138,14 @@ const CSS = `
   .answer-key .ak-section h3 { font-size:12pt; color:var(--ink); }
   .answer-key ul { padding-left: 18px; list-style: none; }
   .answer-key li { margin-bottom: 2mm; font-size: 10pt; }
+
+  /* 문서 상단 로고 / 지문번호 (학원마다 다르게 넣을 수 있는 영역) */
+  .doc-header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 4mm; }
+  .doc-logo { max-height: 14mm; max-width: 40mm; object-fit: contain; }
+  .passage-number {
+    display:inline-block; font-size: 9.5pt; font-weight:700; color:var(--accent-dark);
+    background: var(--accent-pale); border-radius: 4px; padding: 2px 9px; margin-bottom: 3mm;
+  }
 `;
 
 // ---------------------------------------------------------
@@ -509,6 +517,39 @@ function renderAnswerKey(workbook, steps) {
     sections.push(`<div class="ak-section"><h3>STEP 9 — 영작 (예시 답)</h3><ul>${list}</ul></div>`);
   }
 
+  // STEP 10(Check·종합)은 문장마다 유형이 돌아가며 섞여서 출제되므로(renderStep10과
+  // 동일한 rotation 로직), 정답지에도 같은 규칙으로 문장별 정답을 만들어 붙인다.
+  // (이 블록이 빠져 있어서 10단계만 정답지가 안 나오던 버그였음)
+  if (master && need.has(10)) {
+    const chunkBySentence = {};
+    (workbook.chunks?.unscramble || []).forEach((u) => (chunkBySentence[u.sentence_id] = u));
+    const list = sentencesOnly(master)
+      .map((s) => {
+        const rotation = s.id % 4;
+        let type = "";
+        let answer = "";
+        if (rotation === 0 && s.choice_points && s.choice_points.length > 0) {
+          type = "어법선택";
+          answer = s.choice_points.map((c) => escapeHtml(c.correct)).join(", ");
+        } else if (rotation === 1 && s.highlights && s.highlights.length > 0) {
+          type = "빈칸(우리말)";
+          answer = s.highlights.map((h) => escapeHtml(h.ko)).join(", ");
+        } else if (rotation === 2 && chunkBySentence[s.id]) {
+          type = "순서배열";
+          answer = escapeHtml(chunkBySentence[s.id].correct_chunks.join(" "));
+        } else if (s.verb_targets && s.verb_targets.length > 0) {
+          type = "동사형";
+          answer = s.verb_targets.map((v) => escapeHtml(v.correct_form)).join(", ");
+        } else {
+          type = "해석";
+          answer = escapeHtml(s.ko);
+        }
+        return `<li>${s.id}. [${type}] ${answer}</li>`;
+      })
+      .join("");
+    sections.push(`<div class="ak-section"><h3>STEP 10 — Check(종합)</h3><ul>${list}</ul></div>`);
+  }
+
   if (!sections.length) return "";
 
   return `
@@ -521,7 +562,10 @@ function renderAnswerKey(workbook, steps) {
 // ---------------------------------------------------------
 // 전체 문서 렌더링
 // ---------------------------------------------------------
-export function renderWorkbookHTML(workbook, { title = "영어 지문 워크북", steps = null, includeAnswerKey = true } = {}) {
+export function renderWorkbookHTML(
+  workbook,
+  { title = "영어 지문 워크북", steps = null, includeAnswerKey = true, passageNumber = "", logoDataUrl = "" } = {}
+) {
   const need = new Set(steps && steps.length ? steps : workbook.steps || [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   const master = workbook.master;
   const chunks = workbook.chunks;
@@ -538,7 +582,15 @@ export function renderWorkbookHTML(workbook, { title = "영어 지문 워크북"
   if (need.has(8) && master && chunks) parts.push(renderStep8(master, chunks));
   if (need.has(9) && master) parts.push(renderStep9(master));
   if (need.has(10) && master) parts.push(renderStep10(master, chunks));
+  // 정답지는 항상 문서 맨 뒤(마지막 parts 항목)에 붙인다 — 별도 파일로 안 나가고 같은 문서 안에서 뒤로만 간다.
   if (includeAnswerKey) parts.push(renderAnswerKey(workbook, [...need]));
+
+  const headerTop = (passageNumber || logoDataUrl)
+    ? `<div class="doc-header-top">
+         <div>${passageNumber ? `<span class="passage-number">지문 ${escapeHtml(String(passageNumber))}</span>` : ""}</div>
+         ${logoDataUrl ? `<img class="doc-logo" src="${logoDataUrl}" alt="학원 로고" />` : ""}
+       </div>`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -548,6 +600,7 @@ export function renderWorkbookHTML(workbook, { title = "영어 지문 워크북"
   <style>${CSS}</style>
 </head>
 <body>
+  ${headerTop}
   <h1 class="wb-title">${escapeHtml(title)}</h1>
   <div class="wb-meta">
     <span>이름: <b>______________</b></span>

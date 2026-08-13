@@ -351,7 +351,37 @@ def generate_grammar_sets(passage: str, target_grammar: str, level: str, sets: i
 # ---------------------------------------------------------------------------
 # DOCX / PDF 생성 (기존 로직과 동일, 입력 데이터에만 의존)
 # ---------------------------------------------------------------------------
-def add_docx_header(doc, title, subtitle=""):
+def _decode_logo_data_url(logo_data_url: str):
+    """`data:image/png;base64,...` 형태의 문자열을 (bytes, ok) 로 디코드한다.
+    학원 로고는 브라우저에서 base64 data URL로 넘어온다 (서버에 파일로 저장하지 않음)."""
+    import base64
+
+    if not logo_data_url or "," not in logo_data_url:
+        return None
+    try:
+        _, b64 = logo_data_url.split(",", 1)
+        return base64.b64decode(b64)
+    except Exception:
+        return None
+
+
+def add_docx_header(doc, title, subtitle="", logo_data_url="", passage_number=""):
+    import io
+
+    logo_bytes = _decode_logo_data_url(logo_data_url)
+    if logo_bytes:
+        p_logo = doc.add_paragraph()
+        p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        try:
+            p_logo.add_run().add_picture(io.BytesIO(logo_bytes), height=Inches(0.5))
+        except Exception:
+            pass  # 손상된 이미지 데이터면 로고 없이 계속 진행
+
+    if passage_number:
+        p_num = doc.add_paragraph()
+        p_num.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p_num.add_run(f"지문 {passage_number}").bold = True
+
     p = doc.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = p.add_run(title)
@@ -371,7 +401,10 @@ def create_vocabulary_docx(data: dict, output_path: Path):
     section.left_margin = Inches(0.7)
     section.right_margin = Inches(0.7)
 
-    add_docx_header(doc, "ARA VOCABULARY", f"{data.get('title', '')} · {data.get('level', '')}")
+    add_docx_header(
+        doc, "ARA VOCABULARY", f"{data.get('title', '')} · {data.get('level', '')}",
+        logo_data_url=data.get("academy_logo", ""), passage_number=data.get("passage_number", ""),
+    )
 
     for i, item in enumerate(data.get("vocabulary", []), 1):
         table = doc.add_table(rows=0, cols=2)
@@ -402,66 +435,85 @@ def create_vocabulary_docx(data: dict, output_path: Path):
     doc.save(output_path)
 
 
-def create_worksheet_docx(data: dict, worksheet: dict, output_path: Path, answer_key=False):
+def create_worksheet_docx(data: dict, worksheet: dict, output_path: Path):
+    """문제지 + 정답지를 하나의 DOCX에 담는다. 정답지는 항상 문서 맨 뒤(문제 전체 다음)에 붙는다."""
     doc = Document()
-    add_docx_header(doc, "ARA VOCABULARY TEST", data.get("title", ""))
+    add_docx_header(
+        doc, "ARA VOCABULARY TEST", data.get("title", ""),
+        logo_data_url=data.get("academy_logo", ""), passage_number=data.get("passage_number", ""),
+    )
 
     p = doc.add_paragraph("Name: ______________________________    Date: ________________")
     p.paragraph_format.space_after = Pt(14)
 
-    for q in worksheet.get("questions", []):
+    questions = worksheet.get("questions", [])
+    for q in questions:
         p = doc.add_paragraph()
         p.add_run(f"{q.get('number')}. ").bold = True
-
-        if answer_key:
-            p.add_run(f"{q.get('question', '')}  →  {q.get('answer', '')}")
-        else:
-            p.add_run(q.get("question", ""))
-            choices = q.get("choices", [])
-            if choices:
-                doc.add_paragraph("    " + "   ".join(
-                    f"{chr(65+i)}. {choice}" for i, choice in enumerate(choices)
-                ))
-
+        p.add_run(q.get("question", ""))
+        choices = q.get("choices", [])
+        if choices:
+            doc.add_paragraph("    " + "   ".join(
+                f"{chr(65+i)}. {choice}" for i, choice in enumerate(choices)
+            ))
         doc.add_paragraph("")
+
+    if questions:
+        doc.add_page_break()
+        h = doc.add_paragraph()
+        h.add_run("정답 (교사용)").bold = True
+        h.runs[0].font.size = Pt(16)
+        for q in questions:
+            p = doc.add_paragraph()
+            p.add_run(f"{q.get('number')}. ").bold = True
+            p.add_run(f"{q.get('question', '')}  →  {q.get('answer', '')}")
 
     doc.save(output_path)
 
 
 def create_vocabulary_pdf(data: dict, output_path: Path):
-    """화면에 보이는 word-card와 동일한 핑크 브랜드 스타일로 PDF를 렌더링한다."""
+    """화면에 보이는 word-card와 동일한 뉴트럴 스타일로 PDF를 렌더링한다."""
     template = _pdf_env.get_template("vocabulary_pdf.html.j2")
     html_str = template.render(
         title=data.get("title", ""),
         level=data.get("level", ""),
         vocabulary=data.get("vocabulary", []),
+        passage_number=data.get("passage_number", ""),
+        academy_logo=data.get("academy_logo", ""),
     )
     HTML(string=html_str).write_pdf(str(output_path))
 
 
-def create_worksheet_pdf(data: dict, worksheet: dict, output_path: Path, answer_key=False):
-    """화면 단어시험지와 동일한 스타일로 PDF를 렌더링한다. answer_key=True면 정답지 스타일."""
+def create_worksheet_pdf(data: dict, worksheet: dict, output_path: Path):
+    """화면 단어시험지와 동일한 스타일로 PDF를 렌더링한다. 정답지는 항상 같은 PDF 맨 뒤에 붙는다."""
     template = _pdf_env.get_template("worksheet_pdf.html.j2")
     html_str = template.render(
         title=worksheet.get("title", data.get("title", "")),
         questions=worksheet.get("questions", []),
-        answer_key=answer_key,
+        passage_number=data.get("passage_number", ""),
+        academy_logo=data.get("academy_logo", ""),
     )
     HTML(string=html_str).write_pdf(str(output_path))
 
 
-def create_grammar_docx(grammar_data: dict, output_path: Path, answer_key=False):
+def create_grammar_docx(grammar_data: dict, output_path: Path):
+    """문제지 + 정답지를 하나의 DOCX에 담는다. 정답지는 항상 문서 맨 뒤(모든 세트 다음)에 붙는다."""
     doc = Document()
     subtitle = f"목표 문법: {grammar_data.get('target_grammar', '')} · {grammar_data.get('level', '')}"
-    add_docx_header(doc, "ARA GRAMMAR PRACTICE" + (" · 정답지" if answer_key else ""), subtitle)
+    add_docx_header(
+        doc, "ARA GRAMMAR PRACTICE", subtitle,
+        logo_data_url=grammar_data.get("academy_logo", ""), passage_number=grammar_data.get("passage_number", ""),
+    )
 
-    for s in grammar_data.get("sets", []):
+    sets = grammar_data.get("sets", [])
+    marks = ["①", "②", "③", "④", "⑤", "⑥"]
+
+    for s in sets:
         doc.add_paragraph("")
         h = doc.add_paragraph()
         h.add_run(f"SET {s.get('set_number')}").bold = True
-        if not answer_key:
-            p2 = doc.add_paragraph("Name: ______________________________    Date: ________________")
-            p2.paragraph_format.space_after = Pt(10)
+        p2 = doc.add_paragraph("Name: ______________________________    Date: ________________")
+        p2.paragraph_format.space_after = Pt(10)
 
         for q in s.get("questions", []):
             tag = q.get("tag", "")
@@ -480,32 +532,43 @@ def create_grammar_docx(grammar_data: dict, output_path: Path, answer_key=False)
             if secondary:
                 doc.add_paragraph(f"    {secondary}")
 
-            if answer_key:
-                p2 = doc.add_paragraph(f"    → 정답: {q.get('answer', '')}")
-                p2.add_run(f"\n    해설: {q.get('explanation', '')}")
-            elif q.get("type") == "short":
+            if q.get("type") == "short":
                 doc.add_paragraph("    답: ______________________________________________")
             else:
                 choices = q.get("choices", [])
                 if choices:
-                    marks = ["①", "②", "③", "④", "⑤", "⑥"]
                     doc.add_paragraph("    " + "    ".join(
                         f"{marks[i] if i < len(marks) else i+1} {c}" for i, c in enumerate(choices)
                     ))
             doc.add_paragraph("")
 
+    if sets:
+        doc.add_page_break()
+        h = doc.add_paragraph()
+        h.add_run("정답 (교사용)").bold = True
+        h.runs[0].font.size = Pt(16)
+        for s in sets:
+            hs = doc.add_paragraph()
+            hs.add_run(f"SET {s.get('set_number')}").bold = True
+            for q in s.get("questions", []):
+                p2 = doc.add_paragraph()
+                p2.add_run(f"{q.get('number')}. ").bold = True
+                p2.add_run(f"정답: {q.get('answer', '')}")
+                p2.add_run(f"  ·  해설: {q.get('explanation', '')}")
+
     doc.save(output_path)
 
 
-def create_grammar_pdf(grammar_data: dict, output_path: Path, answer_key=False):
-    """세트별로 새 페이지에서 시작하는 어법 문제/정답지 PDF. 화면과 동일한 스타일을 그대로 인쇄한다."""
+def create_grammar_pdf(grammar_data: dict, output_path: Path):
+    """세트별로 새 페이지에서 시작하는 어법 문제 PDF. 정답지는 항상 같은 PDF 맨 뒤에 붙는다."""
     template = _pdf_env.get_template("grammar_pdf.html.j2")
     html_str = template.render(
         title=grammar_data.get("title", ""),
         target_grammar=grammar_data.get("target_grammar", ""),
         level=grammar_data.get("level", ""),
         sets=grammar_data.get("sets", []),
-        answer_key=answer_key,
+        passage_number=grammar_data.get("passage_number", ""),
+        academy_logo=grammar_data.get("academy_logo", ""),
     )
     HTML(string=html_str).write_pdf(str(output_path))
 
@@ -531,6 +594,8 @@ def generate_grammar_standalone(
     target_grammar: str = Form(""),
     grammar_level: str = Form("고등"),
     title: str = Form(""),
+    passage_number: str = Form(""),
+    academy_logo: str = Form(""),
 ):
     """all-in-one 등 외부 페이지에서 iframe으로 바로 호출하는, 어법 문제 1세트 단독 생성 엔드포인트.
     /analyze처럼 어휘 분석을 같이 하지 않고 어법 문제만 생성해서 돌려준다."""
@@ -544,6 +609,8 @@ def generate_grammar_standalone(
         passage, target_grammar, grammar_level, GRAMMAR_SETS, GRAMMAR_QUESTIONS_PER_SET,
         provider, api_key, model, title=title or "Grammar Practice",
     )
+    grammar_data["passage_number"] = passage_number
+    grammar_data["academy_logo"] = academy_logo
     section = render_grammar_section(grammar_data, target_grammar, grammar_level)
 
     return f"""<!DOCTYPE html>
@@ -573,11 +640,15 @@ def analyze(
     focus: str = Form("지문 이해와 시험 대비"),
     target_grammar: str = Form(""),
     grammar_level: str = Form("고등"),
+    passage_number: str = Form(""),
+    academy_logo: str = Form(""),
 ):
     if not passage.strip():
         raise HTTPException(status_code=400, detail="분석할 지문을 입력해주세요.")
     data = analyze_passage(passage, level, count, focus, provider, api_key, model)
     data["passage"] = passage
+    data["passage_number"] = passage_number
+    data["academy_logo"] = academy_logo
     html = (TEMPLATE_DIR / "result.html").read_text(encoding="utf-8")
 
     cards = []
@@ -611,6 +682,8 @@ def analyze(
                 passage, target_grammar, grammar_level, GRAMMAR_SETS, GRAMMAR_QUESTIONS_PER_SET,
                 provider, api_key, model, title=data.get("title", ""),
             )
+            grammar_data["passage_number"] = passage_number
+            grammar_data["academy_logo"] = academy_logo
             grammar_section = render_grammar_section(grammar_data, target_grammar, grammar_level)
         except HTTPException as e:
             detail = e.detail if isinstance(e.detail, str) else "어법 문제 생성에 실패했습니다."
@@ -690,29 +763,17 @@ def render_grammar_section(grammar_data: dict, target_grammar: str, grammar_leve
   <header class="page-header" style="margin-top:48px;">
     <div class="eyebrow">Grammar Practice</div>
     <h1 style="font-size:26px;">목표 문법 어법 문제 · {target_grammar}</h1>
-    <p>{grammar_level} 수준으로 세트당 30문항 이상(객관식+서술형 혼합)을 만들었어요. 문제지와 정답지를 각각 DOCX/PDF로 받을 수 있어요.</p>
+    <p>{grammar_level} 수준으로 30문항 이상(객관식+서술형 혼합)을 만들었어요. 문제와 정답지가 한 파일에 담겨 있어요 (정답은 맨 뒤 페이지).</p>
   </header>
 
   <div class="toolbar">
     <form action="download/grammar/docx" method="post">
       <input type="hidden" name="data" value="{grammar_json}">
-      <input type="hidden" name="answer_key" value="false">
-      <button class="secondary" type="submit">📄 어법 문제 DOCX</button>
+      <button class="secondary" type="submit">📄 DOCX 다운로드 (문제+정답)</button>
     </form>
     <form action="download/grammar/pdf" method="post">
       <input type="hidden" name="data" value="{grammar_json}">
-      <input type="hidden" name="answer_key" value="false">
-      <button class="secondary" type="submit">📕 어법 문제 PDF</button>
-    </form>
-    <form action="download/grammar/docx" method="post">
-      <input type="hidden" name="data" value="{grammar_json}">
-      <input type="hidden" name="answer_key" value="true">
-      <button class="primary" type="submit">✅ 정답지 DOCX</button>
-    </form>
-    <form action="download/grammar/pdf" method="post">
-      <input type="hidden" name="data" value="{grammar_json}">
-      <input type="hidden" name="answer_key" value="true">
-      <button class="primary" type="submit">✅ 정답지 PDF</button>
+      <button class="primary" type="submit">📕 PDF 다운로드 (문제+정답)</button>
     </form>
   </div>
 
@@ -776,40 +837,36 @@ def download_vocabulary_pdf(data: str = Form(...)):
 
 
 @app.post("/download/worksheet/docx")
-def download_worksheet_docx(data: str = Form(...), worksheet: str = Form(...), answer_key: bool = Form(False)):
+def download_worksheet_docx(data: str = Form(...), worksheet: str = Form(...)):
     parsed = json.loads(data)
     worksheet_data = json.loads(worksheet)
     path = OUTPUT_DIR / f"ara_worksheet_{uuid.uuid4().hex}.docx"
-    create_worksheet_docx(parsed, worksheet_data, path, answer_key)
-    filename = "ara_worksheet_answer_key.docx" if answer_key else "ara_worksheet.docx"
-    return FileResponse(path, filename=filename,
+    create_worksheet_docx(parsed, worksheet_data, path)
+    return FileResponse(path, filename="ara_worksheet.docx",
                          media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @app.post("/download/worksheet/pdf")
-def download_worksheet_pdf(data: str = Form(...), worksheet: str = Form(...), answer_key: bool = Form(False)):
+def download_worksheet_pdf(data: str = Form(...), worksheet: str = Form(...)):
     parsed = json.loads(data)
     worksheet_data = json.loads(worksheet)
     path = OUTPUT_DIR / f"ara_worksheet_{uuid.uuid4().hex}.pdf"
-    create_worksheet_pdf(parsed, worksheet_data, path, answer_key)
-    filename = "ara_worksheet_answer_key.pdf" if answer_key else "ara_worksheet.pdf"
-    return FileResponse(path, filename=filename, media_type="application/pdf")
+    create_worksheet_pdf(parsed, worksheet_data, path)
+    return FileResponse(path, filename="ara_worksheet.pdf", media_type="application/pdf")
 
 
 @app.post("/download/grammar/docx")
-def download_grammar_docx(data: str = Form(...), answer_key: bool = Form(False)):
+def download_grammar_docx(data: str = Form(...)):
     grammar_data = json.loads(data)
     path = OUTPUT_DIR / f"ara_grammar_{uuid.uuid4().hex}.docx"
-    create_grammar_docx(grammar_data, path, answer_key)
-    filename = "ara_grammar_answer_key.docx" if answer_key else "ara_grammar.docx"
-    return FileResponse(path, filename=filename,
+    create_grammar_docx(grammar_data, path)
+    return FileResponse(path, filename="ara_grammar.docx",
                          media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document")
 
 
 @app.post("/download/grammar/pdf")
-def download_grammar_pdf(data: str = Form(...), answer_key: bool = Form(False)):
+def download_grammar_pdf(data: str = Form(...)):
     grammar_data = json.loads(data)
     path = OUTPUT_DIR / f"ara_grammar_{uuid.uuid4().hex}.pdf"
-    create_grammar_pdf(grammar_data, path, answer_key)
-    filename = "ara_grammar_answer_key.pdf" if answer_key else "ara_grammar.pdf"
-    return FileResponse(path, filename=filename, media_type="application/pdf")
+    create_grammar_pdf(grammar_data, path)
+    return FileResponse(path, filename="ara_grammar.pdf", media_type="application/pdf")

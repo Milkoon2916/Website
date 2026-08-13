@@ -32,6 +32,7 @@ class TeacherModel(Base):
     pin_hash = Column(String, nullable=False)
     gemini_api_key_encrypted = Column(String, nullable=True)
     gemini_model = Column(String, default="gemini-3-flash")
+    academy_logo = Column(String, nullable=True)  # data URL(base64) — 학원 로고, 모든 생성 문서 상단에 표시
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -92,6 +93,7 @@ class PassageModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     teacher_id = Column(Integer, ForeignKey("teachers.id"), nullable=False)
     title = Column(String, nullable=True)
+    passage_number = Column(String, nullable=True)  # 지문번호 — 입력하면 시험지 맨 위에 표시됨
     raw_text = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

@@ -65,6 +65,19 @@
     </div>
   </div>
 
+  <div class="row">
+    <div>
+      <label for="passageNumber">지문 번호 (선택)</label>
+      <input type="text" id="passageNumber" placeholder="예: 3" />
+      <div class="hint">입력하면 시험지 맨 위에 "지문 N"으로 표시됩니다.</div>
+    </div>
+    <div>
+      <label for="academyLogo">학원 로고 (선택)</label>
+      <input type="file" id="academyLogo" accept="image/*" />
+      <div class="hint">한 번 올려두면 브라우저에 저장되어 다음에도 자동으로 쓰입니다.</div>
+    </div>
+  </div>
+
   <label for="passage">지문 (영어 원문)</label>
   <textarea id="passage" placeholder="여기에 영어 지문을 붙여넣으세요..."></textarea>
 
@@ -129,6 +142,19 @@
   const savedKey = localStorage.getItem("gemini_api_key");
   if (savedKey) $("apiKey").value = savedKey;
 
+  // 학원 로고는 한 번 올리면 브라우저에 저장해두고 계속 재사용 (매번 다시 올릴 필요 없게)
+  let academyLogoDataUrl = localStorage.getItem("academy_logo") || "";
+  $("academyLogo").addEventListener("change", () => {
+    const file = $("academyLogo").files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      academyLogoDataUrl = reader.result;
+      localStorage.setItem("academy_logo", academyLogoDataUrl);
+    };
+    reader.readAsDataURL(file);
+  });
+
   let lastHtml = "";
 
   $("generateBtn").addEventListener("click", async () => {
@@ -136,6 +162,7 @@
     const passage = $("passage").value.trim();
     const model = modelSelect.value;
     const title = $("title").value.trim() || "영어 지문 워크북";
+    const passageNumber = $("passageNumber").value.trim();
     const steps = getSelectedSteps();
 
     $("error").textContent = "";
@@ -163,7 +190,7 @@
         },
       });
 
-      lastHtml = renderWorkbookHTML(workbook, { title, steps });
+      lastHtml = renderWorkbookHTML(workbook, { title, steps, passageNumber, logoDataUrl: academyLogoDataUrl });
 
       const preview = $("preview");
       preview.srcdoc = lastHtml;

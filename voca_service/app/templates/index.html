@@ -44,6 +44,20 @@
 
     <div class="row">
       <div>
+        <label>지문 번호 (선택)</label>
+        <input type="text" name="passage_number" placeholder="예: 3">
+        <p class="hint">입력하면 모든 시험지 맨 위에 "지문 N"으로 표시돼요.</p>
+      </div>
+      <div>
+        <label>학원 로고 (선택)</label>
+        <input type="file" id="academyLogoFile" accept="image/*">
+        <input type="hidden" name="academy_logo" id="academyLogoHidden">
+        <p class="hint">한 번 올려두면 브라우저에 저장되어 다음에도 자동으로 쓰여요.</p>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
         <label>학년 / 수준</label>
         <select name="level">
           <option>중학교 1학년</option>
@@ -150,6 +164,22 @@ document.getElementById('analyzeForm').addEventListener('submit', (e) => {
   document.getElementById('go').disabled = true;
   document.getElementById('status').style.display = 'block';
   document.getElementById('err').style.display = 'none';
+});
+
+// 학원 로고는 한 번 올리면 브라우저에 저장해두고 계속 재사용
+const academyLogoFile = document.getElementById('academyLogoFile');
+const academyLogoHidden = document.getElementById('academyLogoHidden');
+const savedLogo = localStorage.getItem('academy_logo');
+if (savedLogo) academyLogoHidden.value = savedLogo;
+academyLogoFile.addEventListener('change', () => {
+  const file = academyLogoFile.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    academyLogoHidden.value = reader.result;
+    localStorage.setItem('academy_logo', reader.result);
+  };
+  reader.readAsDataURL(file);
 });
 </script>
 </body>

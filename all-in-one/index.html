@@ -134,6 +134,10 @@
   <input type="password" id="apiKey" placeholder="AIza...">
   <span class="toggle" id="toggleKey">키 표시/숨기기</span>
 
+  <label>학원 로고 (선택 · 모든 시험지 상단에 표시됩니다)</label>
+  <input type="file" id="academyLogoFile" accept="image/*">
+  <p class="hint">한 번 올려두면 브라우저에 저장되어 다음에도 자동으로 쓰여요.</p>
+
   <div class="global-row">
     <div>
       <label>한글 OX 문항 수 (지문당)</label>
@@ -326,6 +330,20 @@ document.getElementById('toggleKey').addEventListener('click', () => {
 
 const passageList = document.getElementById('passageList');
 
+// 학원 로고는 한 번 올리면 브라우저에 저장해두고 계속 재사용 (다른 도구들과 동일한 localStorage 키 공유)
+let academyLogoDataUrl = localStorage.getItem('academy_logo') || '';
+const academyLogoFile = document.getElementById('academyLogoFile');
+academyLogoFile.addEventListener('change', () => {
+  const file = academyLogoFile.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    academyLogoDataUrl = reader.result;
+    localStorage.setItem('academy_logo', academyLogoDataUrl);
+  };
+  reader.readAsDataURL(file);
+});
+
 // 단어시험지 워크북 단계 체크박스 채우기 (기본 전체 선택)
 (async function initWorkbookStepGrid(){
   const { ALL_STEPS, STEP_LABELS } = await import('/workbook/workbook-generator.js');
@@ -367,6 +385,8 @@ function addPassageBlock(){
     <div class="block-title">지문 ${idx}</div>
     <label>지문 출처 (선택)</label>
     <input type="text" class="p-source" placeholder="예: 2024 수능 33번, 자체 제작">
+    <label>지문 번호 (선택 · 시험지 맨 위에 표시됩니다)</label>
+    <input type="text" class="p-number" placeholder="예: 3">
     <label>지문 본문</label>
     <textarea class="p-text" placeholder="여기에 영어 지문을 붙여넣으세요"></textarea>
     <div class="char-counter">0자 · 약 0문장 · 안전</div>
@@ -768,7 +788,7 @@ async function runWorkbookBatch(apiKey, model, passages, steps){
         },
       });
       const title = label;
-      const html = renderWorkbookHTML(workbook, { title, steps });
+      const html = renderWorkbookHTML(workbook, { title, steps, passageNumber: p.number, logoDataUrl: academyLogoDataUrl });
       card.querySelector('.wb-status').remove();
       card.insertAdjacentHTML('beforeend', `
         <button type="button" class="btn preview-btn">👀 미리보기</button>
@@ -902,6 +922,8 @@ async function runGrammarBatch(apiKey, model, grammarLevel, passages){
       target_grammar: p.grammar.trim(),
       grammar_level: grammarLevel,
       title: label,
+      passage_number: p.number || '',
+      academy_logo: academyLogoDataUrl || '',
     };
     Object.entries(fields).forEach(([k, v]) => {
       const inp = document.createElement('input');
@@ -969,6 +991,7 @@ document.getElementById('go').addEventListener('click', async () => {
   const blocks = [...passageList.querySelectorAll('.passage-block')];
   const passages = blocks.map(b => ({
     source: b.querySelector('.p-source').value,
+    number: b.querySelector('.p-number').value,
     text: b.querySelector('.p-text').value.trim(),
     grammar: b.querySelector('.p-grammar').value,
   })).filter(p => p.text.length > 0);

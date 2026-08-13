@@ -15,6 +15,13 @@
   *{box-sizing:border-box;}
   body{font-family:"Nanum Gothic", sans-serif; color:#1F1F1D; font-size:11px; line-height:1.65; margin:0;}
 
+  .doc-header-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px; }
+  .doc-logo{ max-height:14mm; max-width:40mm; object-fit:contain; }
+  .passage-number{
+    display:inline-block; font-size:9.5px; font-weight:700; color:#3F4643;
+    background:#EEEFEC; border-radius:4px; padding:2px 9px; margin-bottom:4px;
+  }
+
   h1{font-size:18px; font-weight:700; margin:0 0 4px;}
   .subtitle{font-size:10px; color:#6B6B66; margin:0 0 20px;}
   h2.step-title{
@@ -31,6 +38,12 @@
 </style>
 </head>
 <body>
+  {% if passage_number or academy_logo %}
+  <div class="doc-header-top">
+    <div>{% if passage_number %}<span class="passage-number">지문 {{ passage_number }}</span>{% endif %}</div>
+    {% if academy_logo %}<img class="doc-logo" src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  </div>
+  {% endif %}
   <h1>{{ title or "워크북" }}</h1>
   <p class="subtitle">학습자료 제작소 · 워크북 메이커</p>
 

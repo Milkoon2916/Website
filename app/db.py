@@ -32,6 +32,7 @@ class Teacher:
     pin_hash: str
     gemini_api_key_encrypted: str | None
     gemini_model: str
+    academy_logo: str | None = None
 
 
 def _to_dataclass(row: TeacherModel) -> Teacher:
@@ -41,6 +42,7 @@ def _to_dataclass(row: TeacherModel) -> Teacher:
         pin_hash=row.pin_hash,
         gemini_api_key_encrypted=row.gemini_api_key_encrypted,
         gemini_model=row.gemini_model,
+        academy_logo=row.academy_logo,
     )
 
 
@@ -75,6 +77,12 @@ class RealDB:
         row.gemini_api_key_encrypted = gemini_api_key_encrypted
         if gemini_model:
             row.gemini_model = gemini_model
+        self.session.commit()
+
+    def update_teacher_logo(self, teacher_id: int, academy_logo: str | None):
+        """학원 로고(base64 data URL) 저장 — 한 번 설정해두면 이 선생님이 만드는 모든 문서 상단에 표시됨."""
+        row = self.session.get(TeacherModel, teacher_id)
+        row.academy_logo = academy_logo
         self.session.commit()
 
     # ---------- 단어장(폴더) ----------
@@ -199,8 +207,11 @@ class RealDB:
         )
 
     # ---------- 지문 (지문분석/워크북/OX 공용) ----------
-    def create_passage(self, teacher_id: int, raw_text: str, title: str | None = None) -> PassageModel:
-        row = PassageModel(teacher_id=teacher_id, title=title, raw_text=raw_text, created_at=datetime.utcnow())
+    def create_passage(self, teacher_id: int, raw_text: str, title: str | None = None, passage_number: str | None = None) -> PassageModel:
+        row = PassageModel(
+            teacher_id=teacher_id, title=title, passage_number=passage_number, raw_text=raw_text,
+            created_at=datetime.utcnow(),
+        )
         self.session.add(row)
         self.session.commit()
         self.session.refresh(row)
