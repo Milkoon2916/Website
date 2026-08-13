@@ -2,6 +2,7 @@ import json
 import re
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from html import escape as html_escape
 from pathlib import Path
 
@@ -324,11 +325,21 @@ Passage (topical context only, optional to use):
 
 def generate_grammar_sets(passage: str, target_grammar: str, level: str, sets: int, count: int,
                            provider: str, api_key: str, model: str, title: str = "") -> dict:
-    result_sets = []
-    for i in range(1, sets + 1):
-        result_sets.append(
-            generate_grammar_set(passage, target_grammar, level, i, count, provider, api_key, model)
-        )
+    # 세트별 호출은 서로 독립적(문항이 겹치지 않게만 신경 쓰면 됨)이므로, 순차 호출 대신
+    # 스레드풀로 동시에 쏴서 전체 소요 시간을 "세트 개수 x 1콜"이 아니라 "가장 느린 1콜"
+    # 수준으로 줄인다. (세트 3개를 순서대로 부르면 30문항짜리 큰 JSON 응답을 3번 연달아
+    # 기다리게 되어 전체 호출 시간이 배포 환경(Render)의 요청 타임아웃을 넘겨 502/504로
+    # 끊기는 문제가 있었음.)
+    with ThreadPoolExecutor(max_workers=sets) as executor:
+        futures = [
+            executor.submit(
+                generate_grammar_set, passage, target_grammar, level, i, count, provider, api_key, model
+            )
+            for i in range(1, sets + 1)
+        ]
+        # futures는 제출 순서(세트 번호 순)와 동일한 순서를 유지하므로, 완료 순서와
+        # 무관하게 결과 리스트도 세트 순서대로 정렬된다.
+        result_sets = [f.result() for f in futures]
     return {
         "title": title or "Grammar Practice",
         "target_grammar": target_grammar,
@@ -507,7 +518,7 @@ def home():
     return (TEMPLATE_DIR / "index.html").read_text(encoding="utf-8")
 
 
-GRAMMAR_SETS = 3
+GRAMMAR_SETS = 1
 GRAMMAR_QUESTIONS_PER_SET = 30
 
 
@@ -521,7 +532,7 @@ def generate_grammar_standalone(
     grammar_level: str = Form("고등"),
     title: str = Form(""),
 ):
-    """all-in-one 등 외부 페이지에서 iframe으로 바로 호출하는, 어법 문제 3세트 단독 생성 엔드포인트.
+    """all-in-one 등 외부 페이지에서 iframe으로 바로 호출하는, 어법 문제 1세트 단독 생성 엔드포인트.
     /analyze처럼 어휘 분석을 같이 하지 않고 어법 문제만 생성해서 돌려준다."""
     if not passage.strip():
         raise HTTPException(status_code=400, detail="분석할 지문을 입력해주세요.")
@@ -679,7 +690,7 @@ def render_grammar_section(grammar_data: dict, target_grammar: str, grammar_leve
   <header class="page-header" style="margin-top:48px;">
     <div class="eyebrow">Grammar Practice</div>
     <h1 style="font-size:26px;">목표 문법 어법 문제 · {target_grammar}</h1>
-    <p>{grammar_level} 수준으로 3세트, 세트당 30문항 이상(객관식+서술형 혼합)을 만들었어요. 문제지와 정답지를 각각 DOCX/PDF로 받을 수 있어요.</p>
+    <p>{grammar_level} 수준으로 세트당 30문항 이상(객관식+서술형 혼합)을 만들었어요. 문제지와 정답지를 각각 DOCX/PDF로 받을 수 있어요.</p>
   </header>
 
   <div class="toolbar">

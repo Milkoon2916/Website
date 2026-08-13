@@ -196,7 +196,7 @@
     </label>
     <label class="tool-check">
       <input type="checkbox" id="toolGrammar">
-      <span class="tc-body"><b>🧩 어법 문제 생성</b><span>지문의 "목표 어법"을 다루는 문제 3세트(세트당 30문항)</span></span>
+      <span class="tc-body"><b>🧩 어법 문제 생성</b><span>지문의 "목표 어법"을 다루는 문제 1세트(30문항)</span></span>
     </label>
   </div>
 
@@ -243,7 +243,7 @@
 
     <div class="results-group" data-group="grammar">
       <h3 class="group-h">🧩 어법 문제 생성</h3>
-      <p class="group-p">"목표 어법"을 입력한 지문에 대해서만 생성됩니다. 세트당 30문항, 총 3세트가 지문마다 만들어져요.
+      <p class="group-p">"목표 어법"을 입력한 지문에 대해서만 생성됩니다. 지문마다 30문항이 만들어져요.
         화면 안의 버튼으로 문제지/정답지를 PDF·DOCX로 다운로드할 수 있어요.</p>
       <div id="grammarContainer"></div>
     </div>
@@ -885,7 +885,7 @@ async function runGrammarBatch(apiKey, model, grammarLevel, passages){
     const frameName = `grammar-frame-${i}-${Date.now()}`;
     const card = document.createElement('div');
     card.className = 'result-card';
-    card.innerHTML = `<h4>${escapeHtml(label)} · ${escapeHtml(p.grammar.trim())}</h4><p class="grammar-status">문제 3세트(90문항) 생성 중… (1~2분 정도 걸릴 수 있어요)</p>
+    card.innerHTML = `<h4>${escapeHtml(label)} · ${escapeHtml(p.grammar.trim())}</h4><p class="grammar-status">문제 1세트(30문항) 생성 중… (잠시만 기다려주세요)</p>
       <iframe class="grammar-frame" name="${frameName}" style="display:none;"></iframe>`;
     container.appendChild(card);
 
@@ -926,8 +926,8 @@ async function runGrammarBatch(apiKey, model, grammarLevel, passages){
         resolve();
       });
       form.submit();
-      // 어법 3세트는 시간이 오래 걸릴 수 있어 넉넉히 기다린다
-      setTimeout(() => { if (!done) { done = true; statusEl.textContent = '응답이 늦어지고 있어요. 계속 기다리거나 새로고침 해보세요.'; resolve(); } }, 150000);
+      // 어법 1세트도 30문항 생성이라 시간이 걸릴 수 있어 여유 있게 기다린다
+      setTimeout(() => { if (!done) { done = true; statusEl.textContent = '응답이 늦어지고 있어요. 계속 기다리거나 새로고침 해보세요.'; resolve(); } }, 90000);
     });
     if (i < targets.length - 1) await new Promise(r => setTimeout(r, 1000));
   }
