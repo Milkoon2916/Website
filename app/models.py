@@ -11,12 +11,20 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine
 from sqlalchemy.orm import DeclarativeBase, relationship, sessionmaker
 
-# 로컬 개발: 프로젝트 폴더에 app.db 파일 하나로 저장됨
-# Render 배포: DATABASE_URL 환경변수로 영구 디스크 경로(예: sqlite:////app/data/app.db)를 지정해야
-#   재배포할 때마다 데이터가 사라지지 않음 (render.yaml의 disk 설정과 짝을 이룸)
+# 로컬 개발: 프로젝트 폴더에 app.db 파일 하나로 저장됨 (sqlite)
+#
+# Render 배포(무료 플랜 기준): Render 무료 웹서비스는 "영구 디스크(persistent disk)"를
+# 지원하지 않아서, 로컬 sqlite 파일은 서비스가 재시작/재배포(reactivate)될 때마다
+# 컨테이너와 함께 초기화되어 사라진다. 그래서 데이터를 정말로 보존하려면
+# Render 바깥의 무료 Postgres(Neon, Supabase 등)를 DATABASE_URL 환경변수로 연결해야 한다.
+# 예: postgresql://user:password@host/dbname
+# (유료 플랜으로 올려서 Render 자체 영구 디스크를 쓰는 방법도 있지만, 무료로 유지하려면
+#  외부 Postgres 쪽이 맞다.)
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./app.db")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+# sqlite에서만 필요한 옵션이라, Postgres 등 다른 DB로 연결할 때는 빼야 한다.
+_connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=_connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

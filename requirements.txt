@@ -5,6 +5,8 @@ weasyprint>=63
 pydantic>=2.9
 httpx>=0.27
 python-multipart>=0.0.9
+sqlalchemy>=2.0
+psycopg2-binary>=2.9   # 외부 Postgres(예: Neon, Supabase) 연결용 — 무료 플랜에서 데이터 영구 보관에 필요
 
 # VOCA (어휘/단어시험지)
 openai>=1.0
