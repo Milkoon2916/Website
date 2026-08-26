@@ -14,6 +14,7 @@ from .auth import (
     verify_pin,
 )
 from .db import get_db  # 실제 DB 세션 의존성으로 교체 (SQLAlchemy 등)
+from .limits import MAX_LOGO_DATA_URL_LENGTH
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -40,6 +41,12 @@ class LoginRequest(BaseModel):
 class UpdateKeyRequest(BaseModel):
     gemini_api_key: str | None = None  # 비워두면 기존 키 유지, 모델만 바꿀 수 있음
     gemini_model: str | None = None
+
+
+class UpdateAcademyRequest(BaseModel):
+    academy_name: str | None = None  # PDF 상단에 찍힐 학원 이름 (빈 문자열이면 지움)
+    academy_logo_data_url: str | None = None  # "data:image/png;base64,..." (새로 올릴 때만 값 있음)
+    remove_logo: bool = False  # 로고 삭제 버튼용
 
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
@@ -84,7 +91,13 @@ def me(teacher_id: int = Depends(get_current_teacher_id), db=Depends(get_db)):
         raise HTTPException(status_code=404, detail="선생님 정보를 찾을 수 없어요.")
     # 키 원문은 절대 응답에 포함하지 않고, 마스킹된 형태만 보여줌
     masked = teacher.gemini_api_key_encrypted and "설정됨"
-    return {"name": teacher.name, "gemini_model": teacher.gemini_model, "gemini_api_key": masked}
+    return {
+        "name": teacher.name,
+        "gemini_model": teacher.gemini_model,
+        "gemini_api_key": masked,
+        "academy_name": teacher.academy_name,
+        "academy_logo_data_url": teacher.academy_logo_data_url,  # 본인 것만 조회 가능하니 그대로 내려줌
+    }
 
 
 @router.put("/me/gemini")
@@ -100,6 +113,28 @@ def update_gemini_key(
         teacher_id,
         gemini_api_key_encrypted=encrypted_key,  # None이면 db.py에서 기존 값 유지
         gemini_model=body.gemini_model,
+    )
+    return {"ok": True}
+
+
+@router.put("/me/academy")
+def update_academy(
+    body: UpdateAcademyRequest,
+    teacher_id: int = Depends(get_current_teacher_id),
+    db=Depends(get_db),
+):
+    """PDF 상단에 넣을 학원 이름/로고 설정. 로고는 브라우저에서 base64 data URL로
+    변환해서 보내줌 (별도 파일 스토리지 없이 DB 텍스트 컬럼에 그대로 저장)."""
+    if body.academy_logo_data_url:
+        if not body.academy_logo_data_url.startswith("data:image/"):
+            raise HTTPException(status_code=400, detail="이미지 파일만 로고로 등록할 수 있어요.")
+        if len(body.academy_logo_data_url) > MAX_LOGO_DATA_URL_LENGTH:
+            raise HTTPException(status_code=400, detail="로고 이미지 용량이 너무 커요. 더 작은 이미지로 올려주세요.")
+    db.update_teacher_academy(
+        teacher_id,
+        academy_name=body.academy_name,
+        academy_logo_data_url=body.academy_logo_data_url,
+        remove_logo=body.remove_logo,
     )
     return {"ok": True}
 

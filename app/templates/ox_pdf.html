@@ -14,21 +14,25 @@
   body{font-family:"Nanum Gothic", sans-serif; color:#1F1F1D; font-size:11px; line-height:1.65; margin:0;}
 
   h1{font-size:18px; font-weight:700; margin:0 0 4px;}
-  .subtitle{font-size:10px; color:#6B6B66; margin:0 0 20px;}
+  .subtitle{font-size:10px; color:#5a5a55; margin:0 0 20px;}
   h2.section{font-size:13px; font-weight:700; margin:20px 0 10px;}
+
+  .academy-header{ display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+  .academy-header img{ max-height:34px; max-width:130px; object-fit:contain; }
+  .academy-header .academy-name{ font-size:12px; font-weight:700; color:#17324d; }
 
   .item{border:1px solid #E3E3E0; border-radius:6px; padding:9px 12px; margin-bottom:7px;
     display:flex; justify-content:space-between; gap:12px; page-break-inside:avoid;}
-  .num{color:#9A9A94; font-weight:700; margin-right:4px;}
+  .num{color:#5a5a55; font-weight:700; margin-right:4px;}
   .ox-box{font-size:9px; font-weight:700; padding:1px 10px; border-radius:10px; flex-shrink:0;
-    border:1px solid #C9C9C4; color:#C9C9C4;}
+    border:1.5px solid #4A4A46; color:#2A2A27;}
 
   .answer-key-page{ page-break-before: always; background:#FAFAF8; }
-  .answer-key-subtitle{ font-size:10px; color:#6B6B66; margin:0 0 16px; }
+  .answer-key-subtitle{ font-size:10px; color:#5a5a55; margin:0 0 16px; }
   .answer-grid{ display:flex; flex-wrap:wrap; gap:6px 10px; font-size:10.5px; }
   .answer-chip{ display:flex; align-items:center; gap:5px; border:1px solid #E3E3E0; border-radius:5px;
     padding:3px 9px; }
-  .answer-chip .a-num{ color:#6B6B66; font-weight:700; }
+  .answer-chip .a-num{ color:#5a5a55; font-weight:700; }
   .answer-chip .a-val{ font-weight:700; }
   .answer-chip .a-val.true{ color:#2F5233; }
   .answer-chip .a-val.false{ color:#8A3B32; }
@@ -42,6 +46,13 @@
 <body>
   <h1>{{ title or "O/X 리딩 워크북" }}</h1>
   <p class="subtitle">학습자료 제작소 · O/X 리딩 워크북</p>
+
+  {% if academy_name or academy_logo %}
+  <div class="academy-header">
+    {% if academy_logo %}<img src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+    {% if academy_name %}<span class="academy-name">{{ academy_name }}</span>{% endif %}
+  </div>
+  {% endif %}
 
   {% if passage_text %}
   <div class="passage-box">

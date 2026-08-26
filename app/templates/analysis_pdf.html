@@ -30,13 +30,16 @@
   }
 
   .site-tag { font-size: 8pt; color:#9A9A94; margin-bottom: 6mm; }
+  .academy-header { display:flex; align-items:center; gap:3mm; margin-bottom:4mm; }
+  .academy-header img { max-height:11mm; max-width:44mm; object-fit:contain; }
+  .academy-header .academy-name { font-size:11pt; font-weight:700; color:#17324d; }
 
   .passage-header { border-bottom: 3px solid #17324d; padding-bottom: 4mm; margin-bottom: 5mm; }
   .passage-tag { display:inline-block; background:#17324d; color:#fff; font-size:8.5pt; padding:2px 8px; border-radius:3px; float:right; }
   .passage-title-en { font-size:17pt; font-weight:700; color:#17324d; margin:0; }
-  .passage-title-kr { font-size:10pt; color:#666; margin-top:2px; }
+  .passage-title-kr { font-size:10pt; color:#3a3a37; margin-top:2px; }
   .target-grammar { font-size:8.3pt; color:#8b3fa0; margin-top:3px; }
-  .legend { font-size:8pt; color:#555; margin-top:3mm; }
+  .legend { font-size:8pt; color:#4a4a46; margin-top:3mm; }
   .legend span { margin-right:10px; }
   .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:3px; vertical-align:middle; }
   .legend .sw.underline-sw { background:transparent; border-bottom:2px solid #999; height:0; }
@@ -55,7 +58,7 @@
   .badge-insert { background:#2e9e6b; }     /* 문장삽입 */
   .badge-target { background:#8b3fa0; }     /* 목표 어법 */
   .sent-en { font-size:10.3pt; }
-  .sent-kr { font-size:9.3pt; color:#555; background:#f5f7f9; border-left:3px solid #b9c6d1; padding:2mm 3mm; margin-top:2mm; }
+  .sent-kr { font-size:9.3pt; color:#242422; background:#f5f7f9; border-left:3px solid #b9c6d1; padding:2mm 3mm; margin-top:2mm; }
 
   /* interlinear tagged word: word on one line, small caption below */
   .tag { display:inline-block; text-align:center; vertical-align:top; margin:0 1px; }
@@ -97,6 +100,13 @@
 <body>
 
   <div class="site-tag">학습자료 제작소 · 지문분석기{% if title %} · {{ title }}{% endif %}</div>
+
+  {% if academy_name or academy_logo %}
+  <div class="academy-header">
+    {% if academy_logo %}<img src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+    {% if academy_name %}<span class="academy-name">{{ academy_name }}</span>{% endif %}
+  </div>
+  {% endif %}
 
   <div class="passage-header">
     <span class="passage-tag">지문 {{ result.passage_index or 1 }}</span>

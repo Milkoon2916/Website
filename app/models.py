@@ -45,6 +45,8 @@ class TeacherModel(Base):
     pin_hash = Column(String, nullable=False)
     gemini_api_key_encrypted = Column(String, nullable=True)
     gemini_model = Column(String, default="gemini-3.7-flash")
+    academy_name = Column(String, nullable=True)  # PDF 상단에 찍힐 학원 이름 (선택)
+    academy_logo_data_url = Column(String, nullable=True)  # "data:image/png;base64,..." 형태로 통째로 저장 (선택)
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
@@ -123,3 +125,20 @@ class MaterialModel(Base):
 def init_db():
     """서버 처음 시작할 때 한 번 실행 — 테이블이 없으면 만들어줌."""
     Base.metadata.create_all(bind=engine)
+    _run_light_migrations()
+
+
+def _run_light_migrations():
+    """create_all은 '없는 테이블'만 만들고, 이미 존재하는 테이블에 새로 추가된
+    컬럼(예: academy_name, academy_logo_data_url)은 채워주지 않음. 이 프로젝트엔
+    별도 마이그레이션 도구(alembic 등)가 없어서, 컬럼이 없으면 여기서 최소한으로
+    ALTER TABLE 해줌 (sqlite/Postgres 둘 다 이 문법을 지원함)."""
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    existing_cols = {c["name"] for c in inspector.get_columns("teachers")}
+    with engine.begin() as conn:
+        if "academy_name" not in existing_cols:
+            conn.execute(text("ALTER TABLE teachers ADD COLUMN academy_name VARCHAR"))
+        if "academy_logo_data_url" not in existing_cols:
+            conn.execute(text("ALTER TABLE teachers ADD COLUMN academy_logo_data_url TEXT"))

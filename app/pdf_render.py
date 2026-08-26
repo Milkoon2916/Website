@@ -35,22 +35,38 @@ FONT_REGULAR = (FONTS_DIR / "NanumGothic.ttf").as_uri()
 FONT_BOLD = (FONTS_DIR / "NanumGothicBold.ttf").as_uri()
 
 
-def render_analysis_pdf(result: dict, title: str | None = None) -> bytes:
+def render_analysis_pdf(
+    result: dict, title: str | None = None,
+    academy_name: str | None = None, academy_logo: str | None = None,
+) -> bytes:
     template = env.get_template("analysis_pdf.html")
-    html_str = template.render(result=result, title=title, font_regular=FONT_REGULAR, font_bold=FONT_BOLD)
+    html_str = template.render(
+        result=result, title=title, academy_name=academy_name, academy_logo=academy_logo,
+        font_regular=FONT_REGULAR, font_bold=FONT_BOLD,
+    )
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
 
 
-def render_workbook_pdf(result: dict, title: str | None = None, steps: list[str] | None = None) -> bytes:
+def render_workbook_pdf(
+    result: dict, title: str | None = None, steps: list[str] | None = None,
+    academy_name: str | None = None, academy_logo: str | None = None,
+) -> bytes:
     template = env.get_template("workbook_pdf.html")
     steps = steps or ALL_WORKBOOK_STEPS
-    html_str = template.render(result=result, title=title, steps=steps, font_regular=FONT_REGULAR, font_bold=FONT_BOLD)
+    html_str = template.render(
+        result=result, title=title, steps=steps, academy_name=academy_name, academy_logo=academy_logo,
+        font_regular=FONT_REGULAR, font_bold=FONT_BOLD,
+    )
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
 
 
-def render_ox_pdf(result: dict, title: str | None = None, passage_text: str | None = None) -> bytes:
+def render_ox_pdf(
+    result: dict, title: str | None = None, passage_text: str | None = None,
+    academy_name: str | None = None, academy_logo: str | None = None,
+) -> bytes:
     template = env.get_template("ox_pdf.html")
     html_str = template.render(
-        result=result, title=title, passage_text=passage_text, font_regular=FONT_REGULAR, font_bold=FONT_BOLD,
+        result=result, title=title, passage_text=passage_text, academy_name=academy_name, academy_logo=academy_logo,
+        font_regular=FONT_REGULAR, font_bold=FONT_BOLD,
     )
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()

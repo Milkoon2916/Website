@@ -37,15 +37,19 @@
     background:#3F4643; color:#fff; font-size:11px; font-weight:700; padding:5px 12px; border-radius:14px;
   }
   .step-title-text{font-size:13px; font-weight:700;}
-  .step-doc-title{font-size:10px; color:#6B6B66; margin-left:auto;}
+  .step-doc-title{font-size:10px; color:#4a4a45; margin-left:auto;}
 
-  .instruction{font-size:11px; color:#3F4643; font-weight:700; margin-bottom:12px;}
+  .academy-header{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .academy-header img{ max-height:34px; max-width:130px; object-fit:contain; }
+  .academy-header .academy-name{ font-size:12px; font-weight:700; color:#17324d; }
+
+  .instruction{font-size:11px; color:#242422; font-weight:700; margin-bottom:12px;}
 
   .unit-box{
     border:1px solid #C9C9C4; border-style:dashed; border-radius:6px; padding:12px 14px;
     margin-bottom:14px; page-break-inside:avoid; background:#FAFAF8;
   }
-  .unit-num{color:#6B6B66; font-weight:700; margin-right:4px;}
+  .unit-num{color:#4a4a45; font-weight:700; margin-right:4px;}
   .en-line{margin-bottom:2px;}
   .ko-line{margin-bottom:2px; color:#3F4643;}
 
@@ -76,7 +80,7 @@
   }
   .answer-list{ font-size:10.5px; }
   .answer-row{ display:flex; gap:6px; padding:3px 0; border-bottom:1px dotted #DCDCD8; }
-  .answer-row .a-num{ color:#6B6B66; font-weight:700; flex-shrink:0; width:20px; }
+  .answer-row .a-num{ color:#4a4a45; font-weight:700; flex-shrink:0; width:20px; }
   .answer-row .a-val{ flex:1; }
   .answer-order{ display:flex; align-items:center; gap:6px; font-size:11px; }
 
@@ -86,7 +90,7 @@
   .fc-legend span{ margin-right:12px; }
   table.fc-layout{ width:100%; border-collapse:collapse; table-layout:fixed; }
   table.fc-layout td.fc-en{ width:64%; vertical-align:top; padding:10px 10px 10px 0; border-bottom:1px solid #E3E3E0; }
-  table.fc-layout td.fc-ko{ width:36%; vertical-align:top; padding:10px 0 10px 10px; border-left:1px solid #E3E3E0; border-bottom:1px solid #E3E3E0; color:#6B6B66; font-size:10px; }
+  table.fc-layout td.fc-ko{ width:36%; vertical-align:top; padding:10px 0 10px 10px; border-left:1px solid #E3E3E0; border-bottom:1px solid #E3E3E0; color:#242422; font-size:10px; }
   .fc-block-num{ display:inline-block; background:#3F4643; color:#fff; width:15px; height:15px; text-align:center; line-height:15px; font-size:9px; border-radius:50%; margin-right:5px; }
   .fc-num{ font-size:7.5px; color:#9A9A94; vertical-align:super; margin-left:1px; }
   .fc-blank-label{ color:#D3222A; font-weight:700; font-size:9px; vertical-align:middle; }
@@ -102,6 +106,13 @@
 </style>
 </head>
 <body>
+
+{% if academy_name or academy_logo %}
+<div class="academy-header">
+  {% if academy_logo %}<img src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  {% if academy_name %}<span class="academy-name">{{ academy_name }}</span>{% endif %}
+</div>
+{% endif %}
 
 {% if 'step2' in steps %}
 <div class="step-page">

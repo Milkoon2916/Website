@@ -33,6 +33,8 @@ class Teacher:
     pin_hash: str
     gemini_api_key_encrypted: str | None
     gemini_model: str
+    academy_name: str | None = None
+    academy_logo_data_url: str | None = None
 
 
 def _to_dataclass(row: TeacherModel) -> Teacher:
@@ -42,6 +44,8 @@ def _to_dataclass(row: TeacherModel) -> Teacher:
         pin_hash=row.pin_hash,
         gemini_api_key_encrypted=row.gemini_api_key_encrypted,
         gemini_model=row.gemini_model,
+        academy_name=row.academy_name,
+        academy_logo_data_url=row.academy_logo_data_url,
     )
 
 
@@ -80,6 +84,21 @@ class RealDB:
         row.gemini_api_key_encrypted = gemini_api_key_encrypted
         if gemini_model:
             row.gemini_model = gemini_model
+        self.session.commit()
+
+    def update_teacher_academy(
+        self, teacher_id: int, academy_name: str | None = None,
+        academy_logo_data_url: str | None = None, remove_logo: bool = False,
+    ):
+        """학원 이름/로고 저장. academy_name은 None이면 기존 값 유지(빈 문자열이면 지움),
+        로고는 remove_logo=True일 때만 지우고 그 외엔 새 값이 있을 때만 덮어씀."""
+        row = self.session.get(TeacherModel, teacher_id)
+        if academy_name is not None:
+            row.academy_name = academy_name or None
+        if remove_logo:
+            row.academy_logo_data_url = None
+        elif academy_logo_data_url:
+            row.academy_logo_data_url = academy_logo_data_url
         self.session.commit()
 
     # ---------- 단어장(폴더) ----------

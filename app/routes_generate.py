@@ -299,15 +299,18 @@ def download_material_pdf(material_id: int, teacher_id: int = Depends(get_curren
     content = json.loads(material.content)
     passage = db.get_passage(material.passage_id, teacher_id)
     title = (passage.title if passage else None) or "학습자료"
+    teacher = db.get_teacher(teacher_id)
+    academy_name = teacher.academy_name if teacher else None
+    academy_logo = teacher.academy_logo_data_url if teacher else None
 
     if material.type == "analysis":
-        pdf_bytes = render_analysis_pdf(_unwrap_analysis_result(content), title=title)
+        pdf_bytes = render_analysis_pdf(_unwrap_analysis_result(content), title=title, academy_name=academy_name, academy_logo=academy_logo)
     elif material.type == "workbook":
         steps = content.pop("_selected_steps", None)
-        pdf_bytes = render_workbook_pdf(content, title=title, steps=steps)
+        pdf_bytes = render_workbook_pdf(content, title=title, steps=steps, academy_name=academy_name, academy_logo=academy_logo)
     elif material.type == "ox":
         passage_text = passage.raw_text if passage else None
-        pdf_bytes = render_ox_pdf(content, title=title, passage_text=passage_text)
+        pdf_bytes = render_ox_pdf(content, title=title, passage_text=passage_text, academy_name=academy_name, academy_logo=academy_logo)
     else:
         raise HTTPException(status_code=400, detail="이 자료 유형은 아직 PDF 다운로드를 지원하지 않아요.")
 
