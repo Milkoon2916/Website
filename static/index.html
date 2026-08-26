@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:960px; margin:0 auto;}
+
+  header{padding:56px 0 40px; display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap;}
+  header h1{font-size:28px; font-weight:800; margin:0 0 8px;}
+  header p{color:var(--text-muted); margin:0; font-size:15px;}
+
+  /* ---------- 로그인/계정 영역 ---------- */
+  .account-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; min-width:260px;
+  }
+  .account-box .state-loggedout, .account-box .state-loggedin{display:none;}
+  .account-box.is-loggedout .state-loggedout{display:block;}
+  .account-box.is-loggedin .state-loggedin{display:block;}
+
+  .tab-row{display:flex; gap:6px; margin-bottom:14px;}
+  .tab-btn{
+    flex:1; padding:8px 0; border:1px solid var(--border); background:var(--bg);
+    border-radius:8px; font-family:var(--font-body); font-size:13px; color:var(--text-muted);
+    cursor:pointer;
+  }
+  .tab-btn.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  .field{margin-bottom:10px;}
+  .field label{display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;}
+  .field input{
+    width:100%; padding:9px 10px; border:1px solid var(--border-strong); border-radius:6px;
+    font-family:var(--font-body); font-size:14px; background:var(--bg); color:var(--text);
+  }
+  .field input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .btn-primary{
+    width:100%; padding:10px 0; background:var(--accent); color:#fff; border:none;
+    border-radius:8px; font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary:hover{opacity:.9;}
+  .form-msg{font-size:12px; color:var(--danger); margin-top:8px; min-height:14px;}
+
+  .loggedin-name{font-size:14px; font-weight:700; margin:0 0 2px;}
+  .loggedin-sub{font-size:12px; color:var(--text-muted); margin:0 0 14px;}
+  .btn-secondary{
+    width:100%; padding:8px 0; background:var(--surface); color:var(--text-muted);
+    border:1px solid var(--border); border-radius:8px; font-family:var(--font-body);
+    font-size:13px; cursor:pointer;
+  }
+
+  /* ---------- 통합 생성 CTA ---------- */
+  .cta{
+    display:block; text-decoration:none; margin-top:8px; padding:28px 26px; border-radius:var(--radius);
+    background:var(--accent); border:1px solid var(--accent);
+  }
+  .cta .tag{font-size:11px; padding:3px 9px; border-radius:20px; background:rgba(255,255,255,.15); color:#fff; font-weight:700;}
+  .cta h2{margin:8px 0 6px; font-size:20px; font-weight:800; color:#fff;}
+  .cta p{margin:0; font-size:13.5px; color:rgba(255,255,255,.8); line-height:1.55;}
+  .cta .go{display:inline-block; margin-top:14px; font-size:13px; color:#fff; font-weight:700;}
+
+  /* ---------- 자료 예시 미리보기 (클릭 불가, 눈으로 보는 용도) ---------- */
+  .preview-section{margin-top:36px;}
+  .preview-section > h3{font-size:14px; color:var(--text-muted); margin:0 0 14px; font-weight:700;}
+  .preview-grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px;}
+  @media (max-width:680px){.preview-grid{grid-template-columns:1fr;}}
+
+  .pcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; display:flex; flex-direction:column; gap:10px;}
+  .pcard .ptag{align-self:flex-start; font-size:11px; padding:3px 9px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); font-weight:700;}
+  .pcard h4{margin:0; font-size:15px; font-weight:800;}
+  .pcard .pdesc{margin:0; font-size:12.5px; color:var(--text-muted); line-height:1.5;}
+  .mock{background:var(--bg); border:1px dashed var(--border); border-radius:8px; padding:10px 12px; font-size:12px; color:var(--text-muted); line-height:1.6;}
+  .mock .en{color:var(--text);}
+  .mock .ko{color:var(--text-faint); font-size:11px;}
+  .mock .badge{display:inline-block; font-size:10px; padding:1px 7px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); font-weight:700; margin-right:4px;}
+  .mock .ox-row{display:flex; justify-content:space-between; gap:6px;}
+  .mock .ox-row + .ox-row{margin-top:5px;}
+  .mock .wchip{display:inline-flex; justify-content:space-between; padding:4px 8px; border-radius:6px; background:var(--surface); border:1px solid var(--border); margin-bottom:4px;}
+
+  .manage-link{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:14px;
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 20px; text-decoration:none; color:var(--text);
+  }
+  .manage-link:hover{border-color:var(--border-strong);}
+  .manage-link .ml-title{font-size:14px; font-weight:800; margin:0 0 3px;}
+  .manage-link .ml-desc{font-size:12.5px; color:var(--text-muted); margin:0;}
+  .manage-link .go{font-size:12.5px; color:var(--text-faint); font-weight:700; white-space:nowrap;}
+
+  footer{margin-top:48px; font-size:12px; color:var(--text-faint); text-align:center;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>학습자료 제작소</h1>
+        <p>지문분석 · 워크북 · O/X · 단어장 퀴즈를 한 곳에서 만들고 관리해요.</p>
+      </div>
+
+      <div class="account-box is-loggedout" id="accountBox">
+        <div class="state-loggedout">
+          <div class="tab-row">
+            <button class="tab-btn active" data-tab="login">로그인</button>
+            <button class="tab-btn" data-tab="signup">회원가입</button>
+          </div>
+
+          <form id="loginForm" class="tab-panel">
+            <div class="field"><label>이름</label><input type="text" name="name" required></div>
+            <div class="field"><label>PIN</label><input type="password" name="pin" required></div>
+            <button type="submit" class="btn-primary">로그인</button>
+            <div class="form-msg" id="loginMsg"></div>
+          </form>
+
+          <form id="signupForm" class="tab-panel" style="display:none;">
+            <div class="field"><label>이름</label><input type="text" name="name" required></div>
+            <div class="field"><label>PIN</label><input type="password" name="pin" required></div>
+            <div class="field">
+              <label>Gemini API 키</label>
+              <input type="text" name="gemini_api_key" placeholder="AIza로 시작" required>
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"
+                 style="display:inline-block; margin-top:5px; font-size:11.5px; color:var(--accent); text-decoration:none;">
+                키가 없으신가요? Google AI Studio에서 무료로 발급받기 →
+              </a>
+            </div>
+            <button type="submit" class="btn-primary">가입하고 시작하기</button>
+            <div class="form-msg" id="signupMsg"></div>
+          </form>
+        </div>
+
+        <div class="state-loggedin">
+          <p class="loggedin-name" id="teacherName"></p>
+          <p class="loggedin-sub">로그인됨 · 모델: <span id="currentModel">-</span></p>
+          <button class="btn-secondary" id="settingsToggleBtn" style="margin-bottom:8px;">설정 (모델/키 변경)</button>
+          <button class="btn-secondary" id="logoutBtn">로그아웃</button>
+
+          <div id="settingsPanel" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+            <div class="field">
+              <label>Gemini 모델</label>
+              <select name="gemini_model" id="settingsModel" style="width:100%; padding:9px 10px; border:1px solid var(--border-strong); border-radius:6px; font-family:var(--font-body); font-size:14px; background:var(--bg);">
+                <option value="gemini-3.7-flash">gemini-3.7-flash (기본, 최신·빠르고 저렴)</option>
+                <option value="gemini-3.6-flash">gemini-3.6-flash (이전 버전)</option>
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (더 저렴, 간단한 작업용)</option>
+                <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (고성능)</option>
+                <option value="gemini-2.5-flash">gemini-2.5-flash (구버전, 안정적)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Gemini API 키 (바꿀 때만 입력)</label>
+              <input type="text" id="settingsKey" placeholder="비워두면 기존 키 유지">
+            </div>
+            <button type="button" class="btn-primary" id="settingsSaveBtn">저장</button>
+            <div class="form-msg" id="settingsMsg"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <a class="cta" href="/generate/">
+      <span class="tag">통합 생성</span>
+      <h2>지문 하나(또는 여러 개)로 자료를 한 번에 만들어요</h2>
+      <p>지문분석 · 워크북 · O/X · 목표어법 문제 중 원하는 걸 골라서 만들고, 추출된 단어는 체크박스로 골라 바로 단어장에 담을 수 있어요. 지문을 여러 개 넣으면 순서대로 한 번에 처리돼요.</p>
+      <span class="go">통합 생성으로 만들러 가기 →</span>
+    </a>
+
+    <div class="preview-section">
+      <h3>어떤 자료가 만들어지나요? (아래는 예시예요 — 실제 생성은 위 통합 생성에서 진행돼요)</h3>
+      <div class="preview-grid">
+
+        <div class="pcard">
+          <span class="ptag">PDF 출력</span>
+          <h4>지문분석</h4>
+          <p class="pdesc">문장별 구문분석 · 해석 · 어법 포인트 · 핵심 어휘를 정리해줘요.</p>
+          <div class="mock">
+            <span class="badge">주제문</span>
+            <span class="en">Scientists have long <u>debated</u> whether octopuses feel pain.</span>
+            <div class="ko">과학자들은 문어가 고통을 느끼는지 오랫동안 논쟁해 왔다.</div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <span class="ptag">단계 선택형 학습지</span>
+          <h4>워크북</h4>
+          <p class="pdesc">빈칸 · 해석 · 어법고르기 · 순서배열 · 영작 등 원하는 단계만 골라 만들어요.</p>
+          <div class="mock">
+            <div class="wchip"><span>1) organize</span><span>/</span><span>a plan</span><span>/</span><span>tried to</span></div>
+            <div class="ko">그는 계획을 세우려고 노력했다.</div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <span class="ptag">내용일치 문제</span>
+          <h4>O/X 문제</h4>
+          <p class="pdesc">한글·영어 O/X 문항 수를 직접 정해서, 지문과 함께 만들어줘요.</p>
+          <div class="mock">
+            <div class="ox-row"><span>[1] 문어는 뼈가 없는 연체동물이다.</span><strong>(O)</strong></div>
+            <div class="ox-row"><span>[2] Octopuses have three hearts.</span><strong>(O)</strong></div>
+          </div>
+        </div>
+
+        <div class="pcard">
+          <span class="ptag">워드(.docx) 다운로드</span>
+          <h4>목표어법 문제</h4>
+          <p class="pdesc">단원 태그 + 원문자 객관식 스타일의 문법 테스트, 정답은 항상 맨 뒤에 붙어요.</p>
+          <div class="mock">
+            <span class="badge" style="background:#8b3fa0; color:#fff;">V-3</span>
+            그는 계획을 ① organize ② organizing 하려고 노력했다.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <a class="manage-link" href="/vocabulary/">
+      <div>
+        <p class="ml-title">단어장 · 학생 관리</p>
+        <p class="ml-desc">지문분석에서 뽑은 단어 외에도 단어장을 직접 만들고, 학생에게 링크+코드를 나눠줘서 시험을 볼 수 있어요.</p>
+      </div>
+      <span class="go">관리하러 가기 →</span>
+    </a>
+
+    <footer>선생님 계정으로 로그인하면 개인 Gemini API 키로 모든 자료를 만들 수 있어요.</footer>
+  </div>
+
+<script>
+  const accountBox = document.getElementById('accountBox');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      loginForm.style.display = tab === 'login' ? 'block' : 'none';
+      signupForm.style.display = tab === 'signup' ? 'block' : 'none';
+    });
+  });
+
+  async function checkSession(){
+    try{
+      const res = await fetch('/auth/me', {credentials:'include'});
+      if(res.ok){
+        const data = await res.json();
+        document.getElementById('teacherName').textContent = data.name + ' 선생님';
+        document.getElementById('currentModel').textContent = data.gemini_model || '-';
+        const modelSelect = document.getElementById('settingsModel');
+        if(modelSelect && data.gemini_model){
+          const hasOption = Array.from(modelSelect.options).some(o => o.value === data.gemini_model);
+          if(!hasOption){
+            const opt = document.createElement('option');
+            opt.value = data.gemini_model; opt.textContent = data.gemini_model + ' (현재 저장된 값)';
+            modelSelect.appendChild(opt);
+          }
+          modelSelect.value = data.gemini_model;
+        }
+        accountBox.classList.remove('is-loggedout');
+        accountBox.classList.add('is-loggedin');
+      }
+    }catch(e){ /* 비로그인 상태로 둠 */ }
+  }
+  checkSession();
+
+  document.getElementById('settingsToggleBtn')?.addEventListener('click', () => {
+    const panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('settingsSaveBtn')?.addEventListener('click', async () => {
+    const msg = document.getElementById('settingsMsg');
+    msg.textContent = '저장 중...';
+    const gemini_model = document.getElementById('settingsModel').value;
+    const keyInput = document.getElementById('settingsKey').value.trim();
+    const body = { gemini_model };
+    if(keyInput) body.gemini_api_key = keyInput;
+    const res = await fetch('/auth/me/gemini', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){
+      msg.textContent = '저장했어요!';
+      document.getElementById('settingsKey').value = '';
+      checkSession();
+    } else {
+      const err = await res.json().catch(()=>({}));
+      msg.textContent = err.detail || '저장에 실패했어요.';
+    }
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(loginForm));
+    const msg = document.getElementById('loginMsg');
+    msg.textContent = '';
+    const res = await fetch('/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){ location.reload(); }
+    else { const err = await res.json(); msg.textContent = err.detail || '로그인에 실패했어요.'; }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(signupForm));
+    const msg = document.getElementById('signupMsg');
+    msg.textContent = '';
+    const res = await fetch('/auth/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){ location.reload(); }
+    else { const err = await res.json(); msg.textContent = err.detail || '가입에 실패했어요.'; }
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await fetch('/auth/logout', {method:'POST', credentials:'include'});
+    location.reload();
+  });
+</script>
+</body>
+</html>

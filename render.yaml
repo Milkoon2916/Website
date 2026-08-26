@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: english-materials-studio
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FERNET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+        # 무료로 유지하려면: Neon(neon.tech)이나 Supabase에서 무료 Postgres를 만들고,
+        #   거기서 주는 연결 문자열을 Render 대시보드 > Environment에서 이 값으로 직접 입력하세요.
+        #   (여기 render.yaml에 실제 값을 적지 마세요 — 비밀번호가 포함된 값이라 git에 올라가면 안 돼요.)
+        # 돈을 낼 수 있다면: 아래 disk 블록의 주석을 풀고 Starter 이상 플랜으로 올려서
+        #   sqlite 파일을 영구 디스크에 저장하는 방법도 있어요(DATABASE_URL을
+        #   sqlite:////app/data/app.db 로 설정).
+    # disk:
+    #   name: data
+    #   mountPath: /app/data
+    #   sizeGB: 1

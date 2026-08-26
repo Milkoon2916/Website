@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_regular }}");
+    font-weight: 400;
+  }
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_bold }}");
+    font-weight: 700;
+  }
+
+  @page{
+    size: A4;
+    margin: 14mm 12mm 16mm 12mm;
+    @bottom-center{ content: counter(page) " / " counter(pages); font-family:"Nanum Gothic"; font-size:8px; color:#9A9A94; }
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Nanum Gothic", sans-serif;
+    font-size: 10.3pt;
+    color: #222;
+    line-height: 1.55;
+    margin: 0;
+  }
+
+  .site-tag { font-size: 8pt; color:#9A9A94; margin-bottom: 6mm; }
+
+  .passage-header { border-bottom: 3px solid #17324d; padding-bottom: 4mm; margin-bottom: 5mm; }
+  .passage-tag { display:inline-block; background:#17324d; color:#fff; font-size:8.5pt; padding:2px 8px; border-radius:3px; float:right; }
+  .passage-title-en { font-size:17pt; font-weight:700; color:#17324d; margin:0; }
+  .passage-title-kr { font-size:10pt; color:#666; margin-top:2px; }
+  .target-grammar { font-size:8.3pt; color:#8b3fa0; margin-top:3px; }
+  .legend { font-size:8pt; color:#555; margin-top:3mm; }
+  .legend span { margin-right:10px; }
+  .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+  .legend .sw.underline-sw { background:transparent; border-bottom:2px solid #999; height:0; }
+  .legend .sw.hl-sw { background:#fff2a8; border:1px solid #ccc; }
+  .legend .sw.par-sw { background:#0f9b8e; }
+
+  /* two column layout via table -- reliable across HTML->PDF engines */
+  table.layout { width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.layout td.main-col { width:66%; vertical-align:top; padding-right:6mm; }
+  table.layout td.note-col { width:34%; vertical-align:top; border-left:1px solid #e3e3e3; padding-left:4mm; }
+
+  .sentence-block { margin-bottom:6mm; page-break-inside: avoid; }
+  .sent-num { display:inline-block; background:#17324d; color:#fff; width:16px; height:16px; text-align:center; line-height:16px; font-size:8.5pt; border-radius:50%; margin-right:5px; }
+  .badge { display:inline-block; font-size:7.5pt; font-weight:700; color:#fff; padding:1.5px 6px; border-radius:3px; margin-right:4px; vertical-align:middle; }
+  .badge-topic { background:#17324d; }      /* 주제문 */
+  .badge-insert { background:#2e9e6b; }     /* 문장삽입 */
+  .badge-target { background:#8b3fa0; }     /* 목표 어법 */
+  .sent-en { font-size:10.3pt; }
+  .sent-kr { font-size:9.3pt; color:#555; background:#f5f7f9; border-left:3px solid #b9c6d1; padding:2mm 3mm; margin-top:2mm; }
+
+  /* interlinear tagged word: word on one line, small caption below */
+  .tag { display:inline-block; text-align:center; vertical-align:top; margin:0 1px; }
+  .tag .w { display:block; white-space:nowrap; }
+  .tag .c { display:block; font-size:7.8pt; color:#111; font-weight:600; white-space:nowrap; line-height:1.25; margin-top:0.5px; }
+  .g { color:#d3222a; font-weight:600; } /* grammar - red */
+  .v { color:#2266cc; font-weight:600; } /* vocab - blue */
+  .gv { color:#8b3fa0; font-weight:600; } /* grammar+vocab - purple */
+  .par { color:#0f9b8e; font-weight:600; } /* 순수 병렬 - teal */
+  .par-mark { border-bottom: 1.4px dotted #0f9b8e; } /* 다른 태그(g/v/gv)와 병렬이 겹칠 때: 기존 색 유지 + 점선 밑줄만 추가 */
+  .conn { text-decoration: underline; text-decoration-color:#999; color:#444; } /* connector */
+  mark.hl { background:#fff2a8; padding:0 1px; border-radius:1px; } /* 주제문/목표 어법 문장 전체에 칠하는 형광펜 */
+  .hl { background:#fff2a8; } /* 예전에 저장된 지문분석의 단어 단위 형광펜(하위호환용) */
+
+  .note-box { border:1px solid #e3e3e3; border-radius:4px; margin-bottom:3mm; overflow:hidden; page-break-inside: avoid; }
+  .note-label { font-size:7.6pt; font-weight:700; color:#fff; padding:1.5px 6px; display:inline-block; border-bottom-right-radius:6px; }
+  .note-body { font-size:8.3pt; color:#333; padding:2mm 3mm; }
+  .lbl-comprehension { background:#3a7bd5; }
+  .lbl-grammar { background:#d3222a; }
+  .lbl-blank { background:#e08a1e; }
+  .lbl-writing { background:#2e9e6b; }
+  .lbl-implication { background:#8b3fa0; }
+  .lbl-theme { background:#17324d; }
+
+  .flow-section { margin-top:8mm; border:1px solid #d8dde1; border-radius:5px; overflow:hidden; page-break-inside: avoid; }
+  .flow-row { display:table; width:100%; border-top:1px solid #d8dde1; }
+  .flow-row:first-child { border-top:none; }
+  .flow-key { display:table-cell; width:16mm; background:#17324d; color:#fff; font-size:8.5pt; font-weight:700; text-align:center; vertical-align:middle; padding:2mm; }
+  .flow-val { display:table-cell; font-size:8.6pt; padding:2mm 3mm; vertical-align:middle; }
+
+  .voca-section { margin-top:8mm; }
+  .voca-section h2 { font-size:11pt; color:#17324d; border-bottom:2px solid #17324d; padding-bottom:2mm; margin:0 0 3mm; }
+  table.voca { width:100%; border-collapse:collapse; font-size:9pt; }
+  table.voca th, table.voca td { padding:4px 7px; border-bottom:1px solid #E3E3E0; text-align:left; }
+  table.voca th { color:#fff; font-weight:700; background:#17324d; font-size:8.3pt; }
+  table.voca td.word { font-weight:700; color:#17324d; }
+</style>
+</head>
+<body>
+
+  <div class="site-tag">학습자료 제작소 · 지문분석기{% if title %} · {{ title }}{% endif %}</div>
+
+  <div class="passage-header">
+    <span class="passage-tag">지문 {{ result.passage_index or 1 }}</span>
+    <p class="passage-title-en">{{ result.title_en }}</p>
+    <p class="passage-title-kr">{{ result.title_kr }}</p>
+    {% if result.target_grammar %}<div class="target-grammar">목표 어법: {{ result.target_grammar }}</div>{% endif %}
+    <div class="legend">
+      <span><i class="sw" style="background:#d3222a"></i>문법</span>
+      <span><i class="sw" style="background:#2266cc"></i>어휘</span>
+      <span><i class="sw" style="background:#8b3fa0"></i>문법+어휘</span>
+      <span><i class="sw underline-sw"></i>연결어</span>
+      <span><i class="sw par-sw"></i>병렬관계</span>
+      <span><i class="sw hl-sw"></i>형광펜(주제문·목표 어법)</span>
+    </div>
+  </div>
+
+  <table class="layout">
+  {% for s in result.sentences %}
+  <tr class="align-row">
+  <td class="main-col">
+
+    <div class="sentence-block">
+      <div class="sent-en">
+        {% if s.badge == "topic" %}<span class="badge badge-topic">주제문</span>{% endif %}
+        {% if s.badge == "insert" %}<span class="badge badge-insert">문장삽입</span>{% endif %}
+        {% if s.badge == "target" %}<span class="badge badge-target">목표 어법</span>{% endif %}
+        <span class="sent-num">{{ s.num }}</span>
+        {%- set hl_sentence = s.badge in ("topic", "target") -%}
+        {%- if hl_sentence %}<mark class="hl">{% endif -%}
+        {%- for t in s.tokens %}
+          {%- if t.type == "tag" %}
+            {%- set par_suffix = ("병렬" ~ t.parallel_group ~ "-" ~ (t.parallel_index | circle)) if t.parallel_group else "" -%}
+            {%- set caption = (t.caption ~ " · " ~ par_suffix) if (t.caption and par_suffix) else (par_suffix if par_suffix else t.caption) -%}
+            {%- set base_class = "par" if t.tag_class == "par" else (t.tag_class or "g") -%}
+            {%- set css_class = (base_class ~ " par-mark") if (t.parallel_group and t.tag_class in ("g", "v", "gv")) else base_class -%}
+            <span class="tag"><span class="w {{ css_class }}">{{ t.text }}</span><span class="c">{{ caption }}</span></span>
+          {%- elif t.type == "conn" %} <span class="conn">{{ t.text }}</span>
+          {%- elif t.type == "hl" %} <span class="hl">{{ t.text }}</span>
+          {%- else %} {{ t.text }}
+          {%- endif %}
+        {%- endfor %}
+        {%- if hl_sentence %}</mark>{% endif -%}
+      </div>
+      <div class="sent-kr">{{ s.translation }}</div>
+    </div>
+
+  </td>
+  <td class="note-col">
+
+    {% for n in s.notes %}
+    <div class="note-box">
+      <div class="note-label lbl-{{ n.category }}">{{ s.num }}번 {%
+        if n.category == "comprehension" %}독해 포인트{% elif n.category == "grammar" %}어법 포인트{% elif n.category == "blank" %}빈칸{% elif n.category == "writing" %}서술형{% elif n.category == "implication" %}함의추론{% elif n.category == "theme" %}주제{% else %}포인트{% endif %}</div>
+      <div class="note-body">{{ n.body }}</div>
+    </div>
+    {% endfor %}
+
+  </td>
+  </tr>
+  {% endfor %}
+  </table>
+
+  {% if result.summary %}
+  <div class="flow-section">
+    <div class="flow-row"><div class="flow-key">주제</div><div class="flow-val">{{ result.summary.theme }}</div></div>
+    <div class="flow-row"><div class="flow-key">흐름</div><div class="flow-val">{{ result.summary.flow }}</div></div>
+    <div class="flow-row"><div class="flow-key">배경지식</div><div class="flow-val">{{ result.summary.background }}</div></div>
+  </div>
+  {% endif %}
+
+  {% if result.vocabulary %}
+  <div class="voca-section">
+    <h2>핵심 어휘 &amp; 유의어·반의어</h2>
+    <table class="voca">
+      <thead><tr><th>단어</th><th>뜻</th><th>유의어</th><th>반의어</th></tr></thead>
+      <tbody>
+        {% for v in result.vocabulary %}
+        <tr>
+          <td class="word">{{ v.word }}</td>
+          <td>{{ v.meaning }}</td>
+          <td>{{ v.synonym or "-" }}</td>
+          <td>{{ v.antonym or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+</body>
+</html>
