@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>지문분석기 샘플 · 학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  nav{padding:24px 0; display:flex; align-items:center; gap:16px;}
+  nav a{color:var(--text-muted); text-decoration:none; font-size:13px;}
+  nav h1{font-size:20px; font-weight:800; margin:0;}
+
+  .cta{
+    background:var(--accent); color:#fff; border-radius:var(--radius); padding:20px 24px;
+    display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:28px;
+  }
+  .cta p{margin:0; font-size:14px; line-height:1.6; color:rgba(255,255,255,.85);}
+  .cta p strong{color:#fff;}
+  .cta a{
+    flex-shrink:0; background:#fff; color:var(--accent); text-decoration:none; font-weight:800; font-size:13.5px;
+    padding:10px 20px; border-radius:8px;
+  }
+  .sample-tag{display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); margin-bottom:14px;}
+
+  .result{margin-top:8px;}
+  .sentence-block{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:12px;}
+  .sentence-block .en{font-size:15px; line-height:1.7; margin-bottom:8px;}
+  .sentence-block .ko{font-size:13.5px; color:var(--text-muted); margin-bottom:8px;}
+  .sentence-block .notes{font-size:12.5px; color:var(--text-faint); border-top:1px dashed var(--border); padding-top:8px;}
+  .badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); margin-bottom:6px;}
+
+  .summary-box{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; margin-bottom:20px;}
+  .summary-box h3{margin:0 0 6px; font-size:14px;}
+  .summary-box p{margin:0 0 10px; font-size:13.5px; color:var(--text-muted); line-height:1.6;}
+
+  table.voca{width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;}
+  table.voca th, table.voca td{padding:7px 9px; border-bottom:1px solid var(--border); text-align:left;}
+  table.voca th{color:var(--text-muted); font-size:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="/">← 홈으로</a><h1>지문분석기</h1></nav>
+
+  <div class="cta">
+    <p><strong>이 화면은 샘플이에요.</strong><br>지문분석기로 만들면 이런 결과가 나와요. 워크북·O/X·어법 문제까지 한 번에 만들려면 통합 생성을 이용해주세요.</p>
+    <a href="/generate/">통합 생성에서 만들기 →</a>
+  </div>
+
+  <span class="sample-tag">샘플 결과</span>
+  <div class="result" id="resultBox"></div>
+</div>
+
+<script>
+const SAMPLE_RESULT = {
+  title_en: "Why Mistakes Help Us Learn",
+  title_kr: "실수가 학습에 도움이 되는 이유",
+  target_grammar: "관계대명사 that",
+  summary: {
+    theme: "실수는 피해야 할 것이 아니라 학습을 촉진하는 계기다.",
+    flow: "실수에 대한 통념 제시 → 이를 반박하는 뇌과학 연구 결과 → 실수의 학습 효과에 대한 결론",
+    background: "많은 학생들은 시험이나 수업 중 틀리는 것을 부끄러운 일로 여긴다. 하지만 최근 인지 과학 연구들은 이런 통념과 반대되는 결과를 보여준다. 틀렸을 때 뇌에서 일어나는 반응이 오히려 기억을 강화한다는 것이다."
+  },
+  sentences: [
+    {
+      num: 1, badge: null,
+      tokens: [
+        {type:"text", text:"Many students believe"},
+        {type:"tag", tag_class:"g", text:"that", caption:"명사절"},
+        {type:"text", text:"making a mistake is something to avoid at all costs."}
+      ],
+      translation: "많은 학생들은 실수하는 것을 어떻게든 피해야 한다고 생각한다.",
+      notes: [{category:"comprehension", body:"이 문장은 많은 사람들이 갖고 있는 통념을 먼저 제시하고 있어."}]
+    },
+    {
+      num: 2, badge: "topic",
+      tokens: [
+        {type:"conn", text:"However,"},
+        {type:"text", text:"cognitive scientists have found"},
+        {type:"tag", tag_class:"g", text:"that", caption:"명사절"},
+        {type:"text", text:"the brain grows fastest at the exact moment we get something wrong."}
+      ],
+      translation: "하지만 인지 과학자들은 우리가 무언가를 틀리는 바로 그 순간에 뇌가 가장 빠르게 성장한다는 것을 발견했다.",
+      notes: [
+        {category:"grammar", body:"that절은 have found의 목적어 역할을 하는 명사절이야."},
+        {category:"theme", body:"However로 시작하니까 앞 문장의 통념을 뒤집는, 이 글의 핵심 주장이 나오는 문장이야."}
+      ]
+    },
+    {
+      num: 3, badge: "target",
+      tokens: [
+        {type:"text", text:"When we fail, our brain releases a burst of electrical activity"},
+        {type:"tag", tag_class:"g", text:"that", caption:"관계대명사"},
+        {type:"text", text:"strengthens the neural pathways connected to that memory."}
+      ],
+      translation: "우리가 실패할 때, 뇌는 그 기억과 연결된 신경 경로를 강화하는 전기 활동을 내보낸다.",
+      notes: [{category:"grammar", body:"that는 electrical activity를 수식하는 주격 관계대명사야 — 오늘의 목표 어법!"}]
+    },
+    {
+      num: 4, badge: null,
+      tokens: [
+        {type:"text", text:"This means a wrong answer, followed by the right explanation, can teach us more than getting it right the first time."}
+      ],
+      translation: "이는 틀린 답이라도 올바른 설명이 뒤따르면, 처음부터 맞히는 것보다 더 많은 것을 가르쳐 줄 수 있다는 뜻이다.",
+      notes: [{category:"implication", body:"결론 문장: 틀리는 경험 자체가 학습에 유리할 수 있다는 함의를 담고 있어."}]
+    }
+  ],
+  vocabulary: [
+    {word:"cognitive", meaning:"인지의", synonym:"mental", antonym:"physical"},
+    {word:"strengthen", meaning:"강화하다", synonym:"reinforce", antonym:"weaken"},
+    {word:"pathway", meaning:"경로, 통로", synonym:"route", antonym:""},
+    {word:"exact", meaning:"정확한", synonym:"precise", antonym:"vague"}
+  ]
+};
+
+function render(result){
+  const box = document.getElementById('resultBox');
+  box.innerHTML = '';
+
+  if(result.summary){
+    const s = result.summary;
+    const div = document.createElement('div');
+    div.className = 'summary-box';
+    div.innerHTML = `<h3>${result.title_en||''} <span style="font-weight:400; color:var(--text-muted); font-size:13px;">(${result.title_kr||''})</span></h3>
+      <p><strong>주제:</strong> ${s.theme || ''}</p>
+      <p><strong>흐름:</strong> ${s.flow || ''}</p>
+      <p>${s.background || ''}</p>`;
+    box.appendChild(div);
+  }
+
+  (result.sentences || []).forEach(sent => {
+    const div = document.createElement('div');
+    div.className = 'sentence-block';
+    const BADGE_KO = {topic:'주제문', insert:'문장삽입', target:'목표 어법'};
+    const badge = sent.badge && BADGE_KO[sent.badge] ? `<span class="badge">${BADGE_KO[sent.badge]}</span>` : '';
+    const enText = (sent.tokens || []).map(t => t.text).join(' ');
+    const notes = (sent.notes || []).map(n => `· ${n.body || n.text || n.content || ''}`).join('<br>');
+    div.innerHTML = `${badge}<div class="en">[${sent.num}] ${enText}</div>
+      <div class="ko">${sent.translation || ''}</div>
+      <div class="notes">${notes}</div>`;
+    box.appendChild(div);
+  });
+
+  if(result.vocabulary && result.vocabulary.length){
+    const div = document.createElement('div');
+    div.className = 'summary-box';
+    div.innerHTML = `<h3>핵심 어휘</h3>
+      <table class="voca"><thead><tr><th>단어</th><th>뜻</th><th>유의어</th><th>반의어</th></tr></thead>
+      <tbody>${result.vocabulary.map(v => `<tr><td>${v.word}</td><td>${v.meaning}</td><td>${v.synonym||''}</td><td>${v.antonym||''}</td></tr>`).join('')}</tbody></table>`;
+    box.appendChild(div);
+  }
+}
+
+render(SAMPLE_RESULT);
+</script>
+</body>
+</html>
