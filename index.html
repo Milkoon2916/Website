@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>영어 지문 구문분석 자동 생성기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F7F7F3;
+    --paper-line: #E4E1D8;
+    --ink: #1F2C4C;
+    --ink-soft: #4B5875;
+    --g-red: #B23A2E;
+    --g-red-soft: #F4E3E0;
+    --v-blue: #2E5AAC;
+    --v-blue-soft: #E1E8F6;
+    --gv-purple: #6B4C9A;
+    --gv-purple-soft: #ECE4F4;
+    --hl-yellow: #F0C64B;
+    --shadow: 0 1px 2px rgba(31,44,76,0.06), 0 8px 24px rgba(31,44,76,0.05);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Noto Sans KR", system-ui, sans-serif;
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--paper-line) 1px, transparent 1px);
+    background-size: 100% 2.1em;
+    background-position: 0 148px;
+    color: var(--ink);
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 20px 64px;
+    line-height: 1.6;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 40px 0 28px;
+    margin-bottom: 28px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper);
+  }
+  .eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 6px; height: 6px;
+    background: var(--g-red);
+    display: inline-block;
+    border-radius: 50%;
+  }
+  h1 {
+    font-family: "Noto Serif KR", serif;
+    font-weight: 700;
+    font-size: 26px;
+    margin: 10px 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .hint {
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    line-height: 1.6;
+    max-width: 54ch;
+  }
+  .hint a { color: var(--v-blue); font-weight: 600; text-decoration: none; border-bottom: 1px solid currentColor; }
+
+  /* ---------- Signature: annotated sample strip ---------- */
+  .legend {
+    margin-top: 20px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid var(--paper-line);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+  }
+  .legend-title {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+  .legend-sentence {
+    font-size: 15.5px;
+    line-height: 2.1;
+  }
+  .tag {
+    position: relative;
+    border-bottom: 2px solid;
+    padding-bottom: 1px;
+    font-weight: 600;
+  }
+  .tag::after {
+    content: attr(data-caption);
+    position: absolute;
+    top: -1.35em;
+    left: 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9.5px;
+    font-weight: 500;
+    white-space: nowrap;
+    color: inherit;
+    opacity: 0.85;
+  }
+  .tag.g { color: var(--g-red); border-color: var(--g-red); }
+  .tag.v { color: var(--v-blue); border-color: var(--v-blue); }
+  .tag.gv { color: var(--gv-purple); border-color: var(--gv-purple); }
+  .legend-keys {
+    margin-top: 12px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .legend-keys span { display: inline-flex; align-items: center; gap: 5px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot.g { background: var(--g-red); }
+  .dot.v { background: var(--v-blue); }
+  .dot.gv { background: var(--gv-purple); }
+
+  /* ---------- Steps ---------- */
+  .step {
+    margin-top: 34px;
+    display: flex;
+    gap: 16px;
+  }
+  .step-num {
+    flex: none;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-body { flex: 1; min-width: 0; }
+  .step-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 2px;
+  }
+  .step-desc {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 10px;
+  }
+
+  label.field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin: 14px 0 4px;
+  }
+  label.field-label:first-child { margin-top: 0; }
+
+  textarea, input[type=password], input[type=text], select {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 14.5px;
+    font-family: inherit;
+    color: var(--ink);
+    background: #fff;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: var(--v-blue);
+    box-shadow: 0 0 0 3px var(--v-blue-soft);
+  }
+  textarea { height: 200px; resize: vertical; line-height: 1.7; }
+
+  .key-row { display: flex; gap: 8px; }
+  .key-row input { flex: 1; }
+  .key-row button {
+    padding: 0 14px;
+    font-size: 15px;
+    border: 1.5px solid var(--paper-line);
+    background: #fff;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .key-row button:hover { border-color: var(--v-blue); }
+
+  .field-note {
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 5px;
+    line-height: 1.5;
+  }
+  .field-note.warn { color: var(--g-red); }
+
+  select { appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'><path fill='%234B5875' d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+  }
+
+  /* ---------- Action ---------- */
+  .action-row {
+    margin-top: 36px;
+    padding-top: 24px;
+    border-top: 1.5px dashed var(--paper-line);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  button.primary {
+    padding: 13px 26px;
+    font-size: 15px;
+    font-weight: 700;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: transform .1s ease, background .15s ease;
+  }
+  button.primary:hover:not(:disabled) { background: var(--g-red); }
+  button.primary:active:not(:disabled) { transform: translateY(1px); }
+  button.primary:disabled { background: #B7BCC7; cursor: default; }
+
+  #status {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    font-family: "JetBrains Mono", monospace;
+  }
+
+  #download {
+    display: none;
+    margin-top: 18px;
+    padding: 12px 16px;
+    background: var(--v-blue-soft);
+    color: var(--v-blue);
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  #download:hover { background: var(--gv-purple-soft); color: var(--gv-purple); }
+
+  @media (prefers-reduced-motion: reduce) {
+    button.primary { transition: none; }
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 18px;
+    border-top: 1px solid var(--paper-line);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    font-family: "JetBrains Mono", monospace;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <div class="eyebrow">Passage Analyzer / 학원 전용 도구</div>
+    <h1>영어 지문 구문분석 자동 생성기</h1>
+    <p class="hint">
+      지문을 붙여넣으면 문장 단위 구문분석 · 어휘 · 어법 포인트가 담긴 학생용 워크북 PDF를 만들어드려요.
+      본인의 Google API 키(Gemini)로 직접 분석하며, 키는 이 브라우저에만 저장되고 서버로 전송되지 않습니다.
+      <a href="https://aistudio.google.com/apikey" target="_blank">키 발급받기 ↗</a>
+    </p>
+
+    <div class="legend">
+      <div class="legend-title">산출물 미리보기 — 실제 워크북에 쓰이는 색상 태그 그대로</div>
+      <div class="legend-sentence">
+        <span class="tag g" data-caption="양보">Although</span> the results were
+        <span class="tag v" data-caption="예비의">preliminary</span>, researchers
+        <span class="tag gv" data-caption="수동태·발표">announced</span> their findings.
+      </div>
+      <div class="legend-keys">
+        <span><i class="dot g"></i>문법 (빨강)</span>
+        <span><i class="dot v"></i>어휘 (파랑)</span>
+        <span><i class="dot gv"></i>문법+어휘 (보라)</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">API 키 &amp; 모델 선택</div>
+      <div class="step-desc">Gemini API 키를 입력하고, 키 등급에 맞는 모델을 고르세요.</div>
+
+      <label class="field-label">Google API 키 (Gemini)</label>
+      <div class="key-row">
+        <input type="password" id="apiKey" placeholder="AIza...">
+        <button id="toggleKey" type="button">👁</button>
+      </div>
+      <div class="field-note">키는 이 브라우저에만 저장되며 서버에 파일로 남지 않습니다.</div>
+
+      <label class="field-label">사용할 모델</label>
+      <select id="modelSelect">
+        <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (가볍고 무료 등급 친화적)</option>
+        <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite (더 빠르고 저렴한 최신 경량 모델)</option>
+        <option value="gemini-3.6-flash">Gemini 3.6 Flash (2026.7 최신, 품질 가장 좋음, 결제 등록 권장)</option>
+      </select>
+      <div class="field-note warn">Google이 구세대 모델(2.5 시리즈)을 예고 없이 조기 종료하는 경우가 있어, 오류가 나면 다른 모델로 바꿔보세요.</div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">영어 지문 입력</div>
+      <div class="step-desc">분석할 지문을 그대로 붙여넣으세요.</div>
+
+      <label class="field-label" style="max-width:140px;">지문 번호</label>
+      <input type="number" id="passageIndex" min="1" step="1" value="1" style="max-width:100px;">
+      <div class="field-note">분석이 끝날 때마다 자동으로 +1 됩니다. 직접 바꿔도 돼요.</div>
+
+      <label class="field-label" style="margin-top:16px;">지문 내용</label>
+      <textarea id="passage" placeholder="영어 지문을 여기에 붙여넣으세요..."></textarea>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">목표 어법 <span style="font-weight:400;color:var(--ink-soft);">(선택)</span></div>
+      <div class="step-desc">지정하면 해당 문법이 나타나는 문장에 🎯 표시와 어법 설명이 추가돼요.</div>
+      <input type="text" id="targetGrammar" placeholder="예: 가정법 도치, 분사구문">
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">분석 &amp; 다운로드</div>
+      <div class="action-row">
+        <button class="primary" id="btn">분석하기</button>
+        <span id="status"></span>
+      </div>
+      <a id="download" href="#" target="_blank">📄 PDF 다운로드</a>
+    </div>
+  </div>
+
+  <footer>passage-analyzer · Gemini API 직접 호출 · 서버는 API 키를 보관하지 않습니다</footer>
+
+  <script>
+    const KEY_STORAGE = "passage-analyzer-gemini-api-key";
+    const MODEL_STORAGE = "passage-analyzer-gemini-model";
+    const PASSAGE_INDEX_STORAGE = "passage-analyzer-passage-index";
+    const apiKeyEl = document.getElementById('apiKey');
+    const toggleKeyEl = document.getElementById('toggleKey');
+    const modelSelectEl = document.getElementById('modelSelect');
+    const passageIndexEl = document.getElementById('passageIndex');
+    const passageEl = document.getElementById('passage');
+    const btn = document.getElementById('btn');
+    const statusEl = document.getElementById('status');
+    const downloadEl = document.getElementById('download');
+
+    // 저장된 지문 번호 불러오기
+    const savedIndex = localStorage.getItem(PASSAGE_INDEX_STORAGE);
+    if (savedIndex) passageIndexEl.value = savedIndex;
+    passageIndexEl.addEventListener('input', () => {
+      localStorage.setItem(PASSAGE_INDEX_STORAGE, passageIndexEl.value);
+    });
+
+    // 저장된 키/모델 선택 불러오기
+    apiKeyEl.value = localStorage.getItem(KEY_STORAGE) || '';
+    apiKeyEl.addEventListener('input', () => {
+      localStorage.setItem(KEY_STORAGE, apiKeyEl.value.trim());
+    });
+    const savedModel = localStorage.getItem(MODEL_STORAGE);
+    if (savedModel) modelSelectEl.value = savedModel;
+    modelSelectEl.addEventListener('change', () => {
+      localStorage.setItem(MODEL_STORAGE, modelSelectEl.value);
+    });
+    toggleKeyEl.addEventListener('click', () => {
+      apiKeyEl.type = apiKeyEl.type === 'password' ? 'text' : 'password';
+    });
+
+    function stripCodeFence(text) {
+      let t = text.trim();
+      if (t.startsWith('```')) {
+        t = t.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+      }
+      return t;
+    }
+
+    async function callGeminiDirectly(apiKey, systemPrompt, model, maxTokens, passageText, passageIndex, targetGrammar, responseJsonSchema) {
+      const lines = [`다음 지문을 분석해줘 (지문 번호: ${passageIndex}):`];
+      if (targetGrammar && targetGrammar.trim()) {
+        lines.push(`목표 어법: ${targetGrammar.trim()}`);
+      }
+      lines.push('');
+      lines.push(passageText.trim());
+      const userMessage = lines.join('\n');
+
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+          generationConfig: {
+            maxOutputTokens: maxTokens,
+            responseMimeType: 'application/json',
+            // 텍스트 설명이 아니라 실제 스키마로 강제 -- vocabulary 같은 필수 필드 누락 방지
+            responseJsonSchema: responseJsonSchema,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        const msg = errBody?.error?.message || `Gemini API 오류 (${res.status})`;
+        throw new Error(msg);
+      }
+
+      const data = await res.json();
+      const candidate = data.candidates?.[0];
+      if (!candidate) {
+        throw new Error('Gemini가 응답을 반환하지 않았습니다. (안전 필터 등으로 차단되었을 수 있어요)');
+      }
+      const rawText = candidate.content.parts
+        .filter(p => p.text)
+        .map(p => p.text)
+        .join('');
+      return JSON.parse(stripCodeFence(rawText));
+    }
+
+    btn.addEventListener('click', async () => {
+      const apiKey = apiKeyEl.value.trim();
+      const passage = passageEl.value.trim();
+      const passageIndex = parseInt(passageIndexEl.value, 10) || 1;
+      const targetGrammar = document.getElementById('targetGrammar').value;
+
+      if (!apiKey) { statusEl.textContent = 'Google API 키를 입력해주세요.'; return; }
+      if (!passage) { statusEl.textContent = '지문을 입력해주세요.'; return; }
+
+      btn.disabled = true;
+      downloadEl.style.display = 'none';
+
+      try {
+        statusEl.textContent = '분석 설정을 불러오는 중...';
+        const cfgRes = await fetch('/prompt-config');
+        if (!cfgRes.ok) throw new Error('서버에서 프롬프트 설정을 가져오지 못했습니다.');
+        const cfg = await cfgRes.json();
+
+        statusEl.textContent = 'AI가 지문을 분석하고 있습니다… (20~90초 정도 걸릴 수 있어요)';
+        const selectedModel = modelSelectEl.value;
+        const analysis = await callGeminiDirectly(
+          apiKey, cfg.system_prompt, selectedModel, cfg.max_tokens, passage, passageIndex, targetGrammar, cfg.response_json_schema
+        );
+
+        statusEl.textContent = 'PDF로 렌더링하는 중...';
+        const renderRes = await fetch('/render', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(analysis),
+        });
+        if (!renderRes.ok) {
+          const err = await renderRes.json().catch(() => ({}));
+          throw new Error(err.detail ? JSON.stringify(err.detail) : `렌더링 서버 오류 (${renderRes.status})`);
+        }
+        const renderData = await renderRes.json();
+
+        statusEl.textContent = '완료되었습니다!';
+        downloadEl.href = renderData.download_url;
+        downloadEl.style.display = 'inline-block';
+
+        // 다음 지문을 위해 번호 자동 증가
+        passageIndexEl.value = passageIndex + 1;
+        localStorage.setItem(PASSAGE_INDEX_STORAGE, passageIndexEl.value);
+      } catch (e) {
+        statusEl.textContent = '오류: ' + e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
