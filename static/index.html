@@ -54,69 +54,23 @@
     font-size:13px; cursor:pointer;
   }
 
-  /* ---------- 통합 생성 CTA ---------- */
-  .cta{
-    display:block; text-decoration:none; margin-top:8px; padding:28px 26px; border-radius:var(--radius);
-    background:var(--accent); border:1px solid var(--accent);
-  }
-  .cta .tag{font-size:11px; padding:3px 9px; border-radius:20px; background:rgba(255,255,255,.15); color:#fff; font-weight:700;}
-  .cta h2{margin:8px 0 6px; font-size:20px; font-weight:800; color:#fff;}
-  .cta p{margin:0; font-size:13.5px; color:rgba(255,255,255,.8); line-height:1.55;}
-  .cta .go{display:inline-block; margin-top:14px; font-size:13px; color:#fff; font-weight:700;}
+  /* ---------- 도구 카드 ---------- */
+  .grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-top:8px;}
+  @media (max-width:680px){.grid{grid-template-columns:1fr;}}
 
-  /* ---------- 자료 예시 미리보기 (클릭 불가, 눈으로 보는 용도) ---------- */
-  .preview-section{margin-top:36px;}
-  .preview-section > h3{font-size:14px; color:var(--text-muted); margin:0 0 14px; font-weight:700;}
-  .preview-stack{display:flex; flex-direction:column; gap:18px;}
-
-  .pcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px 22px;}
-  .pcard .pc-head{display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap;}
-  .pcard .ptag{font-size:11px; padding:3px 9px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); font-weight:700;}
-  .pcard h4{margin:0; font-size:15.5px; font-weight:800;}
-  .pcard .pdesc{margin:2px 0 14px; font-size:12.5px; color:var(--text-muted); line-height:1.5;}
-
-  .mock{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:14px 16px; font-size:12.5px; color:var(--text); line-height:1.6;}
-  .mock .mhead{font-size:11px; color:var(--text-faint); font-weight:700; margin-bottom:8px; letter-spacing:.02em;}
-
-  /* 지문분석 목업 */
-  .mock-sentence{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px;}
-  .mock-badge{display:inline-block; font-size:10px; padding:1px 8px; border-radius:20px; color:#fff; font-weight:700; margin-bottom:5px;}
-  .mock-tag{font-weight:700; margin:0 1px;}
-  .mock-tag .cap{display:block; font-size:8.5px; color:#8a8a8a; text-align:center; line-height:1.2;}
-  .mock-ko{font-size:11.5px; color:var(--text-muted); margin-top:5px;}
-  .mock-note{margin-top:6px; font-size:10.5px;}
-  .mock-note .nlabel{display:inline-block; font-size:9.5px; font-weight:700; color:#fff; padding:1px 7px; border-radius:8px; margin-bottom:2px;}
-  .mock-voca{display:flex; justify-content:space-between; gap:6px; font-size:11.5px; padding:5px 0; border-top:1px dashed var(--border);}
-
-  /* 워크북 목업 */
-  .mock-steptabs{display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;}
-  .mock-steptabs span{font-size:10.5px; padding:4px 9px; border-radius:6px; background:var(--surface); border:1px solid var(--border); color:var(--text-faint);}
-  .mock-steptabs span.on{background:var(--accent); color:#fff; border-color:var(--accent);}
-  .mock-wchip{display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:6px; background:var(--surface); border:1px solid var(--border); margin:2px 4px 2px 0; font-size:11.5px;}
-  .mock-wchip .blank{display:inline-block; min-width:46px; border-bottom:1px solid var(--text-faint); text-align:center; color:var(--text-faint);}
-
-  /* OX 목업 */
-  .mock-passage-box{background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:9px 11px; margin-bottom:10px; font-size:11.5px; line-height:1.65; color:var(--text-muted);}
-  .mock-ox-row{display:flex; justify-content:space-between; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:7px 11px; margin-bottom:5px; font-size:12px;}
-  .mock-ox-box{font-size:9px; font-weight:700; padding:1px 9px; border-radius:10px; border:1px solid var(--border-strong); color:var(--text-faint); flex-shrink:0;}
-
-  /* 어법문제 목업 */
-  .mock-qblock{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:10px 12px;}
-  .mock-qtag{display:inline-block; font-size:10px; padding:1px 8px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); font-weight:700; margin-bottom:6px;}
-  .mock-choices{margin:4px 0 6px; font-size:12px;}
-  .mock-answer{font-size:11px; color:var(--text-faint);}
-
-  .mock-caption{margin-top:9px; font-size:11px; color:var(--text-faint);}
-
-  .manage-link{
-    display:flex; align-items:center; justify-content:space-between; gap:14px; margin-top:14px;
+  .card{
     background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:16px 20px; text-decoration:none; color:var(--text);
+    padding:24px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:10px;
+    transition:border-color .15s ease, transform .15s ease;
   }
-  .manage-link:hover{border-color:var(--border-strong);}
-  .manage-link .ml-title{font-size:14px; font-weight:800; margin:0 0 3px;}
-  .manage-link .ml-desc{font-size:12.5px; color:var(--text-muted); margin:0;}
-  .manage-link .go{font-size:12.5px; color:var(--text-faint); font-weight:700; white-space:nowrap;}
+  .card:hover{border-color:var(--border-strong); transform:translateY(-2px);}
+  .card .tag{
+    align-self:flex-start; font-size:11px; padding:3px 9px; border-radius:20px;
+    background:var(--accent-soft); color:var(--text-muted); font-weight:700;
+  }
+  .card h2{margin:0; font-size:18px; font-weight:800;}
+  .card p{margin:0; font-size:13.5px; color:var(--text-muted); line-height:1.55;}
+  .card .go{margin-top:auto; font-size:12.5px; color:var(--text-faint); font-weight:700;}
 
   footer{margin-top:48px; font-size:12px; color:var(--text-faint); text-align:center;}
 </style>
@@ -162,7 +116,7 @@
         <div class="state-loggedin">
           <p class="loggedin-name" id="teacherName"></p>
           <p class="loggedin-sub">로그인됨 · 모델: <span id="currentModel">-</span></p>
-          <button class="btn-secondary" id="settingsToggleBtn" style="margin-bottom:8px;">설정 (모델/키/로고)</button>
+          <button class="btn-secondary" id="settingsToggleBtn" style="margin-bottom:8px;">설정 (모델/키 변경)</button>
           <button class="btn-secondary" id="logoutBtn">로그아웃</button>
 
           <div id="settingsPanel" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
@@ -180,20 +134,6 @@
               <label>Gemini API 키 (바꿀 때만 입력)</label>
               <input type="text" id="settingsKey" placeholder="비워두면 기존 키 유지">
             </div>
-
-            <div class="field" style="padding-top:10px; margin-top:2px; border-top:1px dashed var(--border);">
-              <label>학원 이름 (PDF 상단에 표시, 선택)</label>
-              <input type="text" id="settingsAcademyName" placeholder="예: OO영어학원">
-            </div>
-            <div class="field">
-              <label>학원 로고 (PDF 상단에 표시, 선택 — png/jpg, 500KB 이하 권장)</label>
-              <input type="file" id="settingsLogoFile" accept="image/png,image/jpeg,image/webp" style="width:100%; font-size:12.5px;">
-              <div id="settingsLogoPreviewWrap" style="display:none; margin-top:8px; align-items:center; gap:10px;">
-                <img id="settingsLogoPreview" style="max-height:36px; max-width:120px; object-fit:contain; border:1px solid var(--border); border-radius:4px; background:#fff; padding:3px;">
-                <button type="button" class="btn-secondary" id="settingsLogoRemoveBtn" style="width:auto; padding:5px 10px; font-size:12px;">로고 삭제</button>
-              </div>
-            </div>
-
             <button type="button" class="btn-primary" id="settingsSaveBtn">저장</button>
             <div class="form-msg" id="settingsMsg"></div>
           </div>
@@ -201,124 +141,51 @@
       </div>
     </header>
 
-    <a class="cta" href="/generate/">
-      <span class="tag">통합 생성</span>
-      <h2>지문 하나(또는 여러 개)로 자료를 한 번에 만들어요</h2>
-      <p>지문분석 · 워크북 · O/X · 목표어법 문제 중 원하는 걸 골라서 만들고, 추출된 단어는 체크박스로 골라 바로 단어장에 담을 수 있어요. 지문을 여러 개 넣으면 순서대로 한 번에 처리돼요.</p>
-      <span class="go">통합 생성으로 만들러 가기 →</span>
-    </a>
+    <div class="grid">
+      <a class="card" href="/generate/" style="grid-column: 1 / -1; background:var(--accent); border-color:var(--accent);">
+        <span class="tag" style="background:rgba(255,255,255,.15); color:#fff;">모든 자료 제작은 여기서</span>
+        <h2 style="color:#fff;">통합 생성 — 지문 하나로 전부</h2>
+        <p style="color:rgba(255,255,255,.75);">지문분석 · 워크북 · O/X · 목표어법 문제를 한 번에 만들고, 추출된 단어는 체크박스로 골라 바로 단어장에 담아요. 아래 도구들도 전부 여기서 만들어요.</p>
+        <span class="go" style="color:rgba(255,255,255,.6);">시작하기 →</span>
+      </a>
 
-    <div class="preview-section">
-      <h3>어떤 자료가 만들어지나요? (아래는 실제 생성 결과와 같은 형식의 예시예요 — 실제 생성은 위 통합 생성에서 진행돼요)</h3>
-      <div class="preview-stack">
+      <a class="card" href="/passage-analyzer/">
+        <span class="tag">샘플 미리보기</span>
+        <h2>지문분석기</h2>
+        <p>영어 지문을 붙여넣으면 문장별 구문분석, 번역, 목표 어법 노트를 자동으로 만들어줘요.</p>
+        <span class="go">이렇게 나와요 →</span>
+      </a>
 
-        <div class="pcard">
-          <div class="pc-head"><span class="ptag">PDF 출력</span><h4>지문분석</h4></div>
-          <p class="pdesc">문장마다 구문(어법·어휘·구문) 태그, 한글 해석, 독해·어법 포인트 해설을 달아주고, 핵심 어휘를 유의어·반의어와 함께 정리해요.</p>
-          <div class="mock">
-            <div class="mhead">지문분석 미리보기</div>
+      <a class="card" href="/workbook/">
+        <span class="tag">샘플 미리보기</span>
+        <h2>워크북 메이커</h2>
+        <p>해석 · 빈칸 채우기 · 문장 순서 · 언스크램블 등 여러 단계의 워크북을 한 번에 만들어요.</p>
+        <span class="go">이렇게 나와요 →</span>
+      </a>
 
-            <div class="mock-sentence" style="padding:14px 16px;">
-              <div style="margin-bottom:8px;">
-                <span class="mock-badge" style="background:#17324d;">주제문</span>
-              </div>
-              <div style="font-size:14px; line-height:1.85;">
-                <span style="display:inline-block; background:#17324d; color:#fff; width:18px; height:18px; text-align:center; line-height:18px; font-size:11px; border-radius:50%; margin-right:5px; vertical-align:middle;">1</span>
-                Scientists have long
-                <span class="mock-tag" style="color:#8b3fa0; font-size:14px;">debated<span class="cap" style="font-size:10px;">논쟁하다</span></span>
-                whether octopuses can truly feel pain.
-              </div>
-              <div class="mock-ko" style="font-size:12.5px; margin-top:8px; padding:8px 10px; background:var(--bg); border-left:3px solid #b9c6d1; border-radius:4px;">
-                과학자들은 문어가 정말로 고통을 느낄 수 있는지 오랫동안 논쟁해 왔다.
-              </div>
-              <div class="mock-note" style="margin-top:9px;">
-                <span class="nlabel" style="background:#d3222a; font-size:10.5px; padding:2px 9px;">1번 어법 포인트</span>
-                <div style="font-size:11.5px; margin-top:3px;">debated는 3형식 동사로, whether절(문어가 고통을 느끼는지)을 목적어로 취함.</div>
-              </div>
-            </div>
+      <a class="card" href="/comprehension/">
+        <span class="tag">샘플 미리보기</span>
+        <h2>O/X 리딩 워크북</h2>
+        <p>지문을 넣으면 한글 O/X, 영어 O/X 내용일치 문제가 만들어져요.</p>
+        <span class="go">이렇게 나와요 →</span>
+      </a>
 
-            <div style="display:flex; gap:18px; margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); font-size:12px;">
-              <div><strong>debate</strong> <span style="color:var(--text-faint);">논쟁하다 (유의어 argue)</span></div>
-              <div><strong>avoid</strong> <span style="color:var(--text-faint);">피하다 (반의어 confront)</span></div>
-            </div>
-          </div>
-          <div class="mock-caption">실제로는 지문의 모든 문장에 이런 태그·해석·포인트 해설이 붙고, 핵심 어휘표가 맨 아래 정리돼요.</div>
-        </div>
+      <a class="card" href="/grammar/">
+        <span class="tag">샘플 미리보기</span>
+        <h2>어법 문제 만들기</h2>
+        <p>지문을 넣으면 단원 태그가 붙은 문법 테스트가 만들어지고, 편집 가능한 워드로 받을 수 있어요.</p>
+        <span class="go">이렇게 나와요 →</span>
+      </a>
 
-        <div class="pcard">
-          <div class="pc-head"><span class="ptag">단계 선택형 학습지</span><h4>워크북</h4></div>
-          <p class="pdesc">빈칸(우리말/영문) · 해석 · 동사형 · 어법고르기 · 어색한 곳 찾기 · 순서배열 · 영작 · Final Check까지, 원하는 단계만 골라 만들어요.</p>
-          <div class="mock">
-            <div class="mhead">워크북 미리보기 — 지금 보고 있는 단계: <strong>7. 순서 배열하기</strong></div>
-            <div class="mock-steptabs">
-              <span>1.빈칸(우리말)</span><span>2.빈칸(영문)</span><span>3.해석</span><span>4.동사형</span><span>5.어법고르기</span>
-              <span class="on">7.순서배열</span><span>9.영작</span><span>Final Check</span>
-            </div>
-            <div style="font-size:11.5px; color:var(--text-faint); margin-bottom:8px;">단어를 배열하여 문장을 완성해 보세요.</div>
-            <div class="mock-sentence" style="margin-bottom:6px;">
-              1. 그는 새로운 계획을 세우려고 노력했다.<br>
-              <span class="mock-wchip">organize</span><span class="mock-wchip">tried to</span><span class="mock-wchip">a new plan</span>
-            </div>
-            <div class="mock-sentence" style="margin-bottom:0;">
-              2. 문어는 세 개의 심장을 가지고 있다.<br>
-              <span class="mock-wchip">three hearts</span><span class="mock-wchip">have</span><span class="mock-wchip">octopuses</span>
-            </div>
-          </div>
-          <div class="mock-caption">탭을 눌러 단계를 바꾸는 방식은 실제 생성 결과 화면과 동일해요. 각 단계는 PDF로도 그대로 다운로드돼요.</div>
-        </div>
-
-        <div class="pcard">
-          <div class="pc-head"><span class="ptag">내용일치 문제</span><h4>O/X 문제</h4></div>
-          <p class="pdesc">지문을 맨 위에 보여주고, 그 아래에 한글·영어 O/X 문항을 이어서 배치해요 — 학생이 지문을 읽고 바로 풀 수 있는 구조예요. 문항 수는 직접 정할 수 있고, 정답은 마지막 페이지에 따로 모아둬요.</p>
-          <div class="mock">
-            <div class="mhead">O/X 문제 미리보기</div>
-            <div class="mock-passage-box">
-              Octopuses are soft-bodied molluscs with no internal or external skeleton. They have three hearts and blue blood, and can change the color and texture of their skin in less than a second to hide from predators. […]
-            </div>
-            <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin-bottom:5px;">한글 O/X (10문항 중 일부)</div>
-            <div class="mock-ox-row"><span>[1] 문어는 몸속에 뼈대(골격)를 가지고 있다.</span><span class="mock-ox-box">O / X</span></div>
-            <div class="mock-ox-row"><span>[2] 문어는 심장을 세 개 가지고 있다.</span><span class="mock-ox-box">O / X</span></div>
-            <div style="font-size:11px; font-weight:700; color:var(--text-muted); margin:10px 0 5px;">영어 O/X (5문항 중 일부)</div>
-            <div class="mock-ox-row"><span>[1] Octopuses can change their skin color instantly.</span><span class="mock-ox-box">O / X</span></div>
-          </div>
-          <div class="mock-caption">정답(O/X 표시)은 학생용 문제지와 분리된 채점용 페이지에 따로 정리돼서 나가요.</div>
-        </div>
-
-        <div class="pcard">
-          <div class="pc-head"><span class="ptag">워드(.docx) 다운로드</span><h4>목표어법 문제</h4></div>
-          <p class="pdesc">원하는 목표 어법(분사구문, 관계대명사 등)을 지정하면 단원 태그가 붙은 객관식·순서배열·서술형 문제를 만들고, 편집 가능한 워드 파일로 받을 수 있어요.</p>
-          <div class="mock">
-            <div class="mhead">목표어법 문제 미리보기 (목표 어법: 분사구문)</div>
-            <div class="mock-qblock" style="margin-bottom:8px;">
-              <span class="mock-qtag">V-3</span>
-              <div style="font-weight:700; margin:2px 0 6px;">1. 다음 빈칸에 들어갈 말로 가장 적절한 것을 고르시오.</div>
-              <div class="mock-sentence" style="margin-bottom:6px; padding:8px 10px;">The study, ______ over three years, changed how scientists view octopus behavior.</div>
-              <div class="mock-choices">① conducting &nbsp;&nbsp;&nbsp; ② conducted &nbsp;&nbsp;&nbsp; ③ to conduct</div>
-              <div class="mock-answer">정답: ②</div>
-            </div>
-            <div class="mock-qblock">
-              <span class="mock-qtag">V-3</span>
-              <div style="font-weight:700; margin:2px 0 6px;">2. 우리말과 같은 뜻이 되도록 주어진 단어를 순서대로 배열하시오.</div>
-              <div style="font-size:11.5px; color:var(--text-faint); margin-bottom:5px;">피곤함을 느끼며, 그녀는 일찍 잠자리에 들었다.</div>
-              <div class="mock-sentence" style="margin-bottom:6px; padding:8px 10px;">feeling / tired / to bed / early / went / she</div>
-              <div class="mock-answer">정답: Feeling tired, she went to bed early.</div>
-            </div>
-          </div>
-          <div class="mock-caption">단원 태그(V-3 등)는 목표 어법에 맞춰 자동으로 붙어요.</div>
-        </div>
-
-      </div>
+      <a class="card" href="/vocabulary/">
+        <span class="tag">학생 링크+코드</span>
+        <h2>단어장 퀴즈</h2>
+        <p>단어장을 만들고 학생에게 코드를 나눠주면, 로그인 없이 링크만으로 시험을 봐요.</p>
+        <span class="go">관리하러 가기 →</span>
+      </a>
     </div>
 
-    <a class="manage-link" href="/vocabulary/">
-      <div>
-        <p class="ml-title">단어장 · 학생 관리</p>
-        <p class="ml-desc">지문분석에서 뽑은 단어 외에도 단어장을 직접 만들고, 학생에게 링크+코드를 나눠줘서 시험을 볼 수 있어요.</p>
-      </div>
-      <span class="go">관리하러 가기 →</span>
-    </a>
-
-    <footer>선생님 계정으로 로그인하면 개인 Gemini API 키로 모든 자료를 만들 수 있어요.</footer>
+    <footer>지문분석·워크북·O/X·어법 문제는 전부 <a href="/generate/" style="color:var(--text-muted);">통합 생성</a> 화면에서 만들어요. 아래 개별 카드는 결과물이 어떻게 나오는지 보여주는 샘플이에요.<br>선생님 계정으로 로그인하면 개인 Gemini API 키로 모든 도구를 이용할 수 있어요.</footer>
   </div>
 
 <script>
@@ -354,8 +221,6 @@
           }
           modelSelect.value = data.gemini_model;
         }
-        document.getElementById('settingsAcademyName').value = data.academy_name || '';
-        showLogoPreview(data.academy_logo_data_url || null);
         accountBox.classList.remove('is-loggedout');
         accountBox.classList.add('is-loggedin');
       }
@@ -368,46 +233,6 @@
     panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
   });
 
-  /* ---------- 학원 로고 업로드 (파일 -> base64 data URL로 변환해서 저장) ---------- */
-  let pendingLogoDataUrl = null;   // 새로 고른 파일이 있으면 여기 담김
-  let logoRemoveRequested = false;
-
-  function showLogoPreview(dataUrl){
-    const wrap = document.getElementById('settingsLogoPreviewWrap');
-    const img = document.getElementById('settingsLogoPreview');
-    if(dataUrl){
-      img.src = dataUrl;
-      wrap.style.display = 'flex';
-    } else {
-      wrap.style.display = 'none';
-    }
-  }
-
-  document.getElementById('settingsLogoFile')?.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    const msg = document.getElementById('settingsMsg');
-    if(!file) return;
-    if(file.size > 500 * 1024){
-      msg.textContent = '로고 이미지는 500KB 이하로 올려주세요.';
-      e.target.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      pendingLogoDataUrl = reader.result;
-      logoRemoveRequested = false;
-      showLogoPreview(pendingLogoDataUrl);
-    };
-    reader.readAsDataURL(file);
-  });
-
-  document.getElementById('settingsLogoRemoveBtn')?.addEventListener('click', () => {
-    pendingLogoDataUrl = null;
-    logoRemoveRequested = true;
-    document.getElementById('settingsLogoFile').value = '';
-    showLogoPreview(null);
-  });
-
   document.getElementById('settingsSaveBtn')?.addEventListener('click', async () => {
     const msg = document.getElementById('settingsMsg');
     msg.textContent = '저장 중...';
@@ -415,33 +240,17 @@
     const keyInput = document.getElementById('settingsKey').value.trim();
     const body = { gemini_model };
     if(keyInput) body.gemini_api_key = keyInput;
-
-    const academyBody = {
-      academy_name: document.getElementById('settingsAcademyName').value.trim(),
-      remove_logo: logoRemoveRequested,
-    };
-    if(pendingLogoDataUrl) academyBody.academy_logo_data_url = pendingLogoDataUrl;
-
-    try{
-      const res = await fetch('/auth/me/gemini', {
-        method:'PUT', headers:{'Content-Type':'application/json'},
-        credentials:'include', body: JSON.stringify(body)
-      });
-      if(!res.ok){ throw new Error((await res.json()).detail || '저장에 실패했어요.'); }
-
-      const academyRes = await fetch('/auth/me/academy', {
-        method:'PUT', headers:{'Content-Type':'application/json'},
-        credentials:'include', body: JSON.stringify(academyBody)
-      });
-      if(!academyRes.ok){ throw new Error((await academyRes.json()).detail || '학원 정보 저장에 실패했어요.'); }
-
+    const res = await fetch('/auth/me/gemini', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){
       msg.textContent = '저장했어요!';
       document.getElementById('settingsKey').value = '';
-      pendingLogoDataUrl = null;
-      logoRemoveRequested = false;
       checkSession();
-    }catch(e){
-      msg.textContent = e.message;
+    } else {
+      const err = await res.json().catch(()=>({}));
+      msg.textContent = err.detail || '저장에 실패했어요.';
     }
   });
 
