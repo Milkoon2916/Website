@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>내 정보 — 학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:520px; margin:0 auto;}
+
+  header{padding:56px 0 32px;}
+  .back{font-size:13px; color:var(--text-muted); text-decoration:none;}
+  .back:hover{color:var(--text);}
+  header h1{font-size:24px; font-weight:800; margin:14px 0 6px;}
+  header p{color:var(--text-muted); margin:0; font-size:14px;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px;
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px;}
+  .field .hint{font-size:12px; color:var(--text-faint); margin-top:4px;}
+  .field input, .field select{
+    width:100%; padding:10px 11px; border:1px solid var(--border-strong); border-radius:8px;
+    font-family:var(--font-body); font-size:14px; background:var(--bg); color:var(--text);
+  }
+  .field input:focus, .field select:focus{outline:2px solid var(--accent); outline-offset:1px;}
+  .field input::placeholder{color:var(--text-faint);}
+
+  .current-badge{
+    display:inline-block; font-size:12px; padding:3px 10px; border-radius:20px;
+    background:var(--accent-soft); color:var(--text-muted); font-weight:700; margin-bottom:4px;
+  }
+
+  .btn-primary{
+    width:100%; padding:11px 0; background:var(--accent); color:#fff; border:none;
+    border-radius:8px; font-family:var(--font-body); font-size:14.5px; font-weight:700; cursor:pointer;
+    margin-top:4px;
+  }
+  .btn-primary:hover{opacity:.9;}
+  .btn-primary:disabled{opacity:.6; cursor:default;}
+
+  .form-msg{font-size:13px; margin-top:12px; min-height:16px;}
+  .form-msg.error{color:var(--danger);}
+  .form-msg.success{color:var(--accent);}
+
+  .loggedout-notice{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; text-align:center; color:var(--text-muted); font-size:14px;
+  }
+  .loggedout-notice a{color:var(--text); font-weight:700;}
+
+  #settingsArea{display:none;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <a class="back" href="/">← 홈으로</a>
+      <h1>내 정보</h1>
+      <p>등록해둔 Gemini API 키와 사용할 모델을 확인하고 바꿀 수 있어요.</p>
+    </header>
+
+    <div class="loggedout-notice" id="loggedOutNotice" style="display:none;">
+      로그인 후 이용할 수 있어요. <a href="/">홈으로 가서 로그인하기</a>
+    </div>
+
+    <div id="settingsArea">
+      <div class="card">
+        <div class="field">
+          <span class="current-badge" id="currentName"></span>
+        </div>
+
+        <form id="settingsForm">
+          <div class="field">
+            <label>Gemini API 키</label>
+            <input type="text" name="gemini_api_key" id="apiKeyInput" placeholder="새 키를 입력하면 기존 키를 덮어써요 (AIza로 시작)" required>
+            <p class="hint" id="apiKeyStatus"></p>
+          </div>
+
+          <div class="field">
+            <label>사용할 모델</label>
+            <select name="gemini_model" id="modelSelect">
+              <option value="gemini-3.6-flash">gemini-3.6-flash (권장, 균형잡힌 속도/품질)</option>
+              <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (가장 저렴하고 빠름)</option>
+              <option value="gemini-3.1-pro">gemini-3.1-pro (품질 우선, 느리고 비쌈)</option>
+            </select>
+            <p class="hint">문제가 계속 실패하면 먼저 gemini-3.6-flash로 저장해보세요.</p>
+          </div>
+
+          <button type="submit" class="btn-primary" id="saveBtn">저장하기</button>
+          <div class="form-msg" id="settingsMsg"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const settingsArea = document.getElementById('settingsArea');
+  const loggedOutNotice = document.getElementById('loggedOutNotice');
+  const settingsForm = document.getElementById('settingsForm');
+  const saveBtn = document.getElementById('saveBtn');
+  const msg = document.getElementById('settingsMsg');
+
+  async function loadMe(){
+    try{
+      const res = await fetch('/auth/me', {credentials:'include'});
+      if(!res.ok){
+        loggedOutNotice.style.display = 'block';
+        return;
+      }
+      const data = await res.json();
+      settingsArea.style.display = 'block';
+      document.getElementById('currentName').textContent = data.name + ' 선생님';
+      document.getElementById('apiKeyStatus').textContent =
+        data.gemini_api_key ? '현재 상태: 키 설정됨' : '현재 상태: 키 없음 — 등록해주세요';
+      if(data.gemini_model){
+        const select = document.getElementById('modelSelect');
+        if(![...select.options].some(o => o.value === data.gemini_model)){
+          const opt = document.createElement('option');
+          opt.value = data.gemini_model;
+          opt.textContent = data.gemini_model + ' (현재 저장된 값)';
+          select.appendChild(opt);
+        }
+        select.value = data.gemini_model;
+      }
+    }catch(e){
+      loggedOutNotice.style.display = 'block';
+    }
+  }
+  loadMe();
+
+  settingsForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.textContent = '';
+    msg.className = 'form-msg';
+    saveBtn.disabled = true;
+    saveBtn.textContent = '저장 중...';
+
+    const body = Object.fromEntries(new FormData(settingsForm));
+
+    try{
+      const res = await fetch('/auth/me/gemini', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+      if(res.ok){
+        msg.textContent = '저장했어요. 이제 다시 시도해보세요.';
+        msg.className = 'form-msg success';
+        document.getElementById('apiKeyInput').value = '';
+        loadMe();
+      } else {
+        const err = await res.json();
+        msg.textContent = err.detail || '저장에 실패했어요.';
+        msg.className = 'form-msg error';
+      }
+    } catch(e){
+      msg.textContent = '서버와 통신 중 오류가 발생했어요.';
+      msg.className = 'form-msg error';
+    } finally {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '저장하기';
+    }
+  });
+</script>
+</body>
+</html>

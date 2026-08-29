@@ -48,9 +48,7 @@ def render_workbook_pdf(result: dict, title: str | None = None, steps: list[str]
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()
 
 
-def render_ox_pdf(result: dict, title: str | None = None, passage_text: str | None = None) -> bytes:
+def render_ox_pdf(result: dict, title: str | None = None) -> bytes:
     template = env.get_template("ox_pdf.html")
-    html_str = template.render(
-        result=result, title=title, passage_text=passage_text, font_regular=FONT_REGULAR, font_bold=FONT_BOLD,
-    )
+    html_str = template.render(result=result, title=title, font_regular=FONT_REGULAR, font_bold=FONT_BOLD)
     return HTML(string=html_str, base_url=str(BASE_DIR)).write_pdf()

@@ -44,7 +44,7 @@ class TeacherModel(Base):
     name = Column(String, unique=True, nullable=False)
     pin_hash = Column(String, nullable=False)
     gemini_api_key_encrypted = Column(String, nullable=True)
-    gemini_model = Column(String, default="gemini-3.7-flash")
+    gemini_model = Column(String, default="gemini-3.5-flash")
     created_at = Column(DateTime, default=datetime.utcnow)
 
 

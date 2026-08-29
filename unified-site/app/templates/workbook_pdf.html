@@ -52,7 +52,8 @@
   .blank-lines{margin-top:10px;}
   .blank-line{border-bottom:1px solid #B8B8B3; height:16px; margin-bottom:8px;}
 
-  .word-order-box{ margin-bottom:8px; font-size:11.5px; letter-spacing:0.2px; }
+  .word-order-box{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+  .word-chip{ border:1px solid #C9C9C4; border-radius:5px; padding:3px 9px; font-size:11px; }
 
   .flawed-passage{ border:1px solid #C9C9C4; border-radius:6px; padding:14px; margin-bottom:16px; background:#FAFAF8; }
   .flawed-passage .underline-item{ text-decoration:underline; text-decoration-color:#3F4643; font-weight:700; }
@@ -216,7 +217,9 @@
   {% for u in result.units %}
   <div class="unit-box">
     <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
-    <div class="word-order-box">{{ u.word_order_words | join(' / ') }}</div>
+    <div class="word-order-box">
+      {% for w in u.word_order_words %}<span class="word-chip">{{ w }}</span>{% endfor %}
+    </div>
     <div class="blank-line"></div>
   </div>
   {% endfor %}

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: english-materials-studio
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FERNET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        value: sqlite:////app/data/app.db
+    disk:
+      # SQLite 파일(app.db)이 재배포할 때마다 사라지지 않으려면 영구 디스크가 필요해요.
+      # (Render 무료 플랜은 디스크를 지원하지 않아서, 최소 Starter 플랜 이상이어야 해요.
+      #  무료로 유지하고 싶으면 나중에 Render Postgres(무료 티어)로 옮기는 걸 고려해보세요.)
+      name: data
+      mountPath: /app/data
+      sizeGB: 1

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>목표어법 문제 · 학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:900px; margin:0 auto;}
+  nav{padding:24px 0; display:flex; align-items:center; gap:16px;}
+  nav a{color:var(--text-muted); text-decoration:none; font-size:13px;}
+  nav h1{font-size:20px; font-weight:800; margin:0;}
+
+  .gate{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:32px; text-align:center; color:var(--text-muted);}
+  .gate a{color:var(--accent); font-weight:700;}
+
+  textarea{
+    width:100%; min-height:200px; padding:14px; border:1px solid var(--border-strong); border-radius:10px;
+    font-family:var(--font-body); font-size:14px; background:var(--surface); color:var(--text); resize:vertical;
+  }
+  .row{display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;}
+  input[type=text]{padding:9px 10px; border:1px solid var(--border-strong); border-radius:6px; font-family:var(--font-body); font-size:14px;}
+  button.btn{
+    padding:11px 22px; background:var(--accent); color:#fff; border:none; border-radius:8px;
+    font-family:var(--font-body); font-size:14.5px; font-weight:700; cursor:pointer;
+  }
+  button.btn:disabled{opacity:.5; cursor:default;}
+  .msg{font-size:13.5px; color:var(--danger); margin-top:10px;}
+  .loading{font-size:13.5px; color:var(--text-muted); margin-top:10px;}
+
+  .result{margin-top:32px;}
+  .dl-link{
+    display:inline-block; margin-bottom:16px; padding:9px 18px; background:var(--accent); color:#fff;
+    text-decoration:none; border-radius:8px; font-size:13.5px; font-weight:700;
+  }
+  .block{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-bottom:14px;}
+  .sentence-block{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 12px; margin-bottom:8px;}
+  .badge{display:inline-block; font-size:11px; padding:2px 8px; border-radius:20px; background:var(--accent-soft); color:var(--text-muted); margin-bottom:6px;}
+  .hint{font-size:12.5px; color:var(--text-faint); margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav><a href="/">← 홈으로</a><h1>목표어법 문제</h1></nav>
+
+  <div id="gate" class="gate">로그인이 필요해요. <a href="/">홈으로 가서 로그인하기</a></div>
+
+  <div id="content" style="display:none;">
+    <textarea id="passageInput" placeholder="영어 지문을 붙여넣으세요."></textarea>
+    <div class="row">
+      <input type="text" id="targetGrammar" placeholder="목표 어법 (선택, 예: 분사구문)">
+      <input type="text" id="titleInput" placeholder="자료 제목 (선택)">
+      <button class="btn" id="genBtn">문제 만들기</button>
+    </div>
+    <div class="loading" id="loadingMsg" style="display:none;">Gemini가 10문항을 만드는 중이에요... (20초~1분 정도 걸려요)</div>
+    <div class="msg" id="errorMsg"></div>
+
+    <div class="result" id="resultBox"></div>
+  </div>
+</div>
+
+<script>
+async function checkAuth(){
+  const res = await fetch('/auth/me', {credentials:'include'});
+  if(res.ok){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('content').style.display = 'block';
+  }
+}
+checkAuth();
+
+const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧'];
+
+document.getElementById('genBtn').onclick = async () => {
+  const passage_text = document.getElementById('passageInput').value.trim();
+  const target_grammar = document.getElementById('targetGrammar').value.trim() || null;
+  const title = document.getElementById('titleInput').value.trim() || null;
+  const errorMsg = document.getElementById('errorMsg');
+  const loading = document.getElementById('loadingMsg');
+  errorMsg.textContent = '';
+  if(!passage_text){ errorMsg.textContent = '지문을 입력해주세요.'; return; }
+
+  document.getElementById('genBtn').disabled = true;
+  loading.style.display = 'block';
+  document.getElementById('resultBox').innerHTML = '';
+
+  try{
+    const res = await fetch('/api/grammar-quiz', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      body: JSON.stringify({passage_text, target_grammar, title})
+    });
+    if(!res.ok){ throw new Error((await res.json()).detail || '생성에 실패했어요.'); }
+    const data = await res.json();
+    render(data.result, data.material_id);
+  }catch(e){
+    errorMsg.textContent = e.message;
+  }finally{
+    loading.style.display = 'none';
+    document.getElementById('genBtn').disabled = false;
+  }
+};
+
+function render(result, materialId){
+  const box = document.getElementById('resultBox');
+  let html = '';
+  if(materialId){
+    html += `<a class="dl-link" href="/api/materials/${materialId}/docx">워드 다운로드 (편집 가능)</a>`;
+  }
+  html += `<p class="hint" style="margin-bottom:16px;">목표 어법: ${result.target_grammar||''}</p>`;
+
+  (result.questions||[]).forEach(q => {
+    let body = '';
+    if(q.type === 'choice_parens' || q.type === 'fill_blank_choice'){
+      const choiceLine = (q.choices||[]).map((c,i)=>`${CIRCLED[i]} ${c}`).join('&nbsp;&nbsp;&nbsp;');
+      body = `<div class="sentence-block">${q.sentence}</div><div style="margin-bottom:10px;">${choiceLine}</div>
+        <div class="hint">정답: ${CIRCLED[q.answer_index??0]}</div>`;
+    } else if(q.type === 'choose_sentence'){
+      const lines = (q.choices||[]).map((c,i)=>`<div>${CIRCLED[i]} ${c}</div>`).join('');
+      body = `<div style="margin-bottom:10px;">${lines}</div><div class="hint">정답: ${CIRCLED[q.answer_index??0]}</div>`;
+    } else if(q.type === 'order_words'){
+      body = `<div class="hint" style="margin-bottom:6px;">${q.korean_hint||''}</div>
+        <div class="sentence-block">${(q.words||[]).join(' / ')}</div>
+        <div class="hint">정답: ${q.answer||''}</div>`;
+    } else if(q.type === 'rewrite'){
+      body = `<div class="sentence-block">${q.sentence||''}</div>
+        <div class="hint">정답: ${q.answer||''}</div>`;
+    }
+    html += `<div class="block">
+      <span class="badge">${q.tag||''}</span>
+      <div style="font-weight:700; margin:4px 0 8px;">${q.num}. ${q.instruction||''}</div>
+      ${body}
+    </div>`;
+  });
+  box.innerHTML = html;
+}
+</script>
+</body>
+</html>

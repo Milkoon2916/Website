@@ -32,25 +32,13 @@
   .answer-chip .a-val{ font-weight:700; }
   .answer-chip .a-val.true{ color:#2F5233; }
   .answer-chip .a-val.false{ color:#8A3B32; }
-
-  .passage-box{ border:1px solid #E3E3E0; border-radius:6px; padding:14px 16px; margin-bottom:18px;
-    background:#FAFAF8; page-break-inside:avoid; }
-  .passage-box h2.section{ margin-top:0; }
-  .passage-text{ white-space:pre-wrap; }
 </style>
 </head>
 <body>
   <h1>{{ title or "O/X 리딩 워크북" }}</h1>
   <p class="subtitle">학습자료 제작소 · O/X 리딩 워크북</p>
 
-  {% if passage_text %}
-  <div class="passage-box">
-    <h2 class="section">지문</h2>
-    <div class="passage-text">{{ passage_text }}</div>
-  </div>
-  {% endif %}
-
-  <h2 class="section">한글 O/X ({{ result.korean_ox | length }}문항)</h2>
+  <h2 class="section">한글 O/X (10문항)</h2>
   {% for it in result.korean_ox %}
   <div class="item">
     <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>
@@ -58,7 +46,7 @@
   </div>
   {% endfor %}
 
-  <h2 class="section">영어 O/X ({{ result.english_ox | length }}문항)</h2>
+  <h2 class="section">영어 O/X (5문항)</h2>
   {% for it in result.english_ox %}
   <div class="item">
     <span><span class="num">[{{ it.num }}]</span>{{ it.statement }}</span>

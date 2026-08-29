@@ -72,11 +72,6 @@
   .step-check{display:flex; align-items:center; gap:6px; font-size:12.5px; padding:5px 8px; border-radius:6px; background:var(--bg);}
   .step-check input{accent-color:var(--accent);}
   #workbookStepsPicker{display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);}
-  #oxCountPicker{display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);}
-  .ox-count-row{display:flex; gap:20px; flex-wrap:wrap;}
-  .ox-count-field{display:flex; align-items:center; gap:8px; font-size:13px;}
-  .ox-count-field input{width:60px; padding:6px 8px; border:1px solid var(--border-strong); border-radius:6px; font-family:var(--font-body); font-size:13px;}
-  .ox-passage-box{background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:12px 14px; margin-bottom:10px; font-size:13.5px; line-height:1.7; white-space:pre-wrap;}
 </style>
 </head>
 <body>
@@ -99,14 +94,6 @@
           <span class="links"><button id="stepsAllBtn" type="button">전체 선택</button> · <button id="stepsNoneBtn" type="button">전체 해제</button></span>
         </div>
         <div class="steps-grid" id="workbookStepsGrid"></div>
-      </div>
-
-      <div id="oxCountPicker">
-        <div class="picker-title"><span>O/X 문항 수</span></div>
-        <div class="ox-count-row">
-          <label class="ox-count-field">한글 <input type="number" id="oxKoreanCount" value="10" min="1" max="20"></label>
-          <label class="ox-count-field">영어 <input type="number" id="oxEnglishCount" value="5" min="1" max="20"></label>
-        </div>
       </div>
     </div>
 
@@ -165,8 +152,6 @@ document.getElementById('stepsNoneBtn').onclick = () => document.querySelectorAl
 function syncWorkbookStepsVisibility(){
   const workbookChecked = document.querySelector('.material-cb[value=workbook]').checked;
   document.getElementById('workbookStepsPicker').style.display = workbookChecked ? 'block' : 'none';
-  const oxChecked = document.querySelector('.material-cb[value=ox]').checked;
-  document.getElementById('oxCountPicker').style.display = oxChecked ? 'block' : 'none';
 }
 materialsGrid.addEventListener('change', syncWorkbookStepsVisibility);
 syncWorkbookStepsVisibility();
@@ -186,8 +171,6 @@ document.getElementById('genBtn').onclick = async () => {
   const title = document.getElementById('titleInput').value.trim() || null;
   const materials = Array.from(document.querySelectorAll('.material-cb:checked')).map(c => c.value);
   const workbook_steps = Array.from(document.querySelectorAll('.wstep-cb:checked')).map(c => c.value);
-  const ox_korean_count = parseInt(document.getElementById('oxKoreanCount').value, 10) || 10;
-  const ox_english_count = parseInt(document.getElementById('oxEnglishCount').value, 10) || 5;
   const errorMsg = document.getElementById('errorMsg');
   const loading = document.getElementById('loadingMsg');
   const statusRow = document.getElementById('statusRow');
@@ -204,7 +187,7 @@ document.getElementById('genBtn').onclick = async () => {
   try{
     const res = await fetch('/api/generate-all', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-      body: JSON.stringify({passage_text, target_grammar, title, materials, workbook_steps, ox_korean_count, ox_english_count})
+      body: JSON.stringify({passage_text, target_grammar, title, materials, workbook_steps})
     });
     if(!res.ok){ throw new Error((await res.json()).detail || '생성에 실패했어요.'); }
     const data = await res.json();
@@ -222,7 +205,7 @@ document.getElementById('genBtn').onclick = async () => {
     });
 
     buildTabs(materials, data.materials);
-    renderAll(data.materials, workbook_steps, passage_text);
+    renderAll(data.materials, workbook_steps);
     document.getElementById('resultArea').style.display = 'block';
   }catch(e){
     errorMsg.textContent = e.message;
@@ -259,11 +242,11 @@ function dlButton(materialId){
   return `<a class="dl-link" href="/api/materials/${materialId}/pdf">PDF 다운로드</a>`;
 }
 
-function renderAll(materials, workbookSteps, passageText){
+function renderAll(materials, workbookSteps){
   materialIds = {};
   if(materials.analysis) { materialIds.analysis = materials.analysis.material_id; renderAnalysis(materials.analysis.result, materials.analysis.material_id); }
   if(materials.workbook) { materialIds.workbook = materials.workbook.material_id; renderWorkbook(materials.workbook.result, materials.workbook.material_id, workbookSteps); }
-  if(materials.ox) { materialIds.ox = materials.ox.material_id; renderOx(materials.ox.result, materials.ox.material_id, passageText); }
+  if(materials.ox) { materialIds.ox = materials.ox.material_id; renderOx(materials.ox.result, materials.ox.material_id); }
   if(materials.grammar_quiz) { renderGrammarQuiz(materials.grammar_quiz.result, materials.grammar_quiz.material_id); }
 
   vocabWords = (materials.analysis && materials.analysis.result.vocabulary) || [];
@@ -397,7 +380,7 @@ function renderWorkbookStep(step, result){
   }
   if(step === 'step8'){
     return '<div class="hint" style="margin-bottom:10px;">단어를 배열하여 문장을 완성해 보세요.</div>' +
-      units.map(u => `<div class="block">${u.num}. ${u.ko}<div style="margin-top:4px; font-size:14px; letter-spacing:0.2px;">${(u.word_order_words||[]).join(' / ')}</div></div>`).join('');
+      units.map(u => `<div class="block">${u.num}. ${u.ko}<div>${(u.word_order_words||[]).map(w=>`<span style="display:inline-block; border:1px solid var(--border-strong); border-radius:5px; padding:2px 8px; font-size:12.5px; margin:2px 4px 2px 0;">${w}</span>`).join('')}</div></div>`).join('');
   }
   if(step === 'step9'){
     const po = result.paragraph_order;
@@ -435,23 +418,14 @@ function renderWorkbookStep(step, result){
   return '';
 }
 
-function renderOx(result, materialId, passageText){
+function renderOx(result, materialId){
   const box = document.getElementById('panel-ox');
   let html = dlButton(materialId);
-  if(passageText){
-    html += `<h4>지문</h4><div class="ox-passage-box">${escapeHtmlGen(passageText)}</div>`;
-  }
-  html += `<h4>한글 O/X (${(result.korean_ox||[]).length}문항)</h4>`;
+  html += '<h4>한글 O/X</h4>';
   (result.korean_ox||[]).forEach(it => html += `<div class="block">[${it.num}] ${it.statement} <strong>(${it.answer?'O':'X'})</strong></div>`);
-  html += `<h4>영어 O/X (${(result.english_ox||[]).length}문항)</h4>`;
+  html += '<h4>영어 O/X</h4>';
   (result.english_ox||[]).forEach(it => html += `<div class="block">[${it.num}] ${it.statement} <strong>(${it.answer?'O':'X'})</strong></div>`);
   box.innerHTML = html;
-}
-
-function escapeHtmlGen(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
 }
 
 const CIRCLED = ['①','②','③','④','⑤','⑥','⑦','⑧'];

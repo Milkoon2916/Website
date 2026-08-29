@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 16mm 14mm 18mm 14mm; }
+  :root{
+    --card:#FFFFFF; --ink:#1F2123; --ink-soft:#6B6E73;
+    --rule:#E3E2DE; --pink:#4B4D52; --pink-dark:#26272A; --pink-pale:#EDECE9;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; color:var(--ink);
+    font-family:"NanumGothic","Nanum Gothic","Noto Sans CJK KR",sans-serif;
+    font-size:12px; line-height:1.65;
+  }
+  .doc-header{ margin-bottom:14px; border-bottom:2px solid var(--pink); padding-bottom:10px; }
+  .eyebrow{
+    font-family:"IBM Plex Mono","Noto Sans Mono",monospace;
+    font-size:9px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--pink-dark); font-weight:700; margin:0 0 4px;
+  }
+  h1{ font-size:22px; font-weight:900; margin:0 0 4px; letter-spacing:-.01em; }
+  .subtitle{ font-size:11px; color:var(--ink-soft); margin:0 0 10px; }
+  .nameline{ font-size:11px; color:var(--ink-soft); margin:0; }
+  {% if answer_key %}.nameline{ display:none; }{% endif %}
+
+  .question{
+    padding:11px 0; border-bottom:1.2px dashed var(--rule);
+    font-size:12.5px; line-height:1.65; page-break-inside:avoid; break-inside:avoid;
+  }
+  .question:last-child{ border-bottom:none; }
+  .question .num{
+    display:inline-block; min-width:20px; margin-right:6px; padding:2px 7px;
+    background:var(--pink-pale); color:var(--pink-dark); border-radius:6px;
+    font-weight:700; font-size:11px;
+  }
+  .answer{ color:var(--pink-dark); font-weight:700; }
+  .choices{
+    margin-top:8px; font-size:11.5px; color:var(--ink); line-height:1.8;
+    display:flex; flex-direction:column; gap:3px; padding-left:26px;
+  }
+</style>
+</head>
+<body>
+  <div class="doc-header">
+    <p class="eyebrow">ARA Vocab AI {% if answer_key %}&middot; 정답지{% endif %}</p>
+    <h1>ARA VOCABULARY TEST</h1>
+    <p class="subtitle">{{ title }}</p>
+    <p class="nameline">Name: ______________________________&nbsp;&nbsp;&nbsp;&nbsp;Date: ________________</p>
+  </div>
+
+  {% for q in questions %}
+  <div class="question">
+    <span class="num">{{ q.number }}</span>{{ q.question }}
+    {% if answer_key %}
+      <span class="answer">&nbsp;&rarr;&nbsp;{{ q.answer }}</span>
+    {% elif q.choices %}
+      <div class="choices">
+        {% for c in q.choices %}<span>{{ ['A','B','C','D','E','F'][loop.index0] }}. {{ c }}</span>{% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</body>
+</html>

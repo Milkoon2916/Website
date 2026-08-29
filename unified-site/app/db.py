@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
 
 from .limits import (
     MAX_STUDENTS_PER_TEACHER,
@@ -67,11 +66,7 @@ class RealDB:
             created_at=datetime.utcnow(),
         )
         self.session.add(row)
-        try:
-            self.session.commit()
-        except IntegrityError:
-            self.session.rollback()
-            raise HTTPException(status_code=409, detail="이미 등록된 이름이에요. 다른 이름을 쓰거나 로그인해주세요.")
+        self.session.commit()
         self.session.refresh(row)
         return _to_dataclass(row)
 

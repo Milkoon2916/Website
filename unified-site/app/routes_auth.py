@@ -29,7 +29,7 @@ class SignupRequest(BaseModel):
     name: str
     pin: str
     gemini_api_key: str
-    gemini_model: str = "gemini-3.7-flash"
+    gemini_model: str = "gemini-3.5-flash"
 
 
 class LoginRequest(BaseModel):

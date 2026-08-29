@@ -20,15 +20,13 @@ from .prompts import (
     ANALYSIS_MODEL,
     GRAMMAR_QUIZ_MODEL,
     GRAMMAR_QUIZ_SYSTEM_PROMPT,
-    OX_DEFAULT_ENGLISH_COUNT,
-    OX_DEFAULT_KOREAN_COUNT,
     OX_MODEL,
+    OX_SYSTEM_PROMPT,
     WORKBOOK_MODEL,
     WORKBOOK_SYSTEM_PROMPT,
     build_analysis_prompt,
     build_analysis_user_message,
     build_grammar_quiz_user_message,
-    build_ox_system_prompt,
     build_ox_user_message,
     build_workbook_user_message,
 )
@@ -44,8 +42,6 @@ class GenerateRequest(BaseModel):
     target_grammar: str | None = None  # 지문분석/목표어법 전용, 나머지는 무시됨
     materials: list[str] | None = None  # generate-all에서 어떤 자료를 만들지 선택 (기본: 전체)
     workbook_steps: list[str] | None = None  # 워크북에서 어떤 단계를 만들지 선택 (기본: 전체)
-    ox_korean_count: int = OX_DEFAULT_KOREAN_COUNT  # OX 한글 문항 수
-    ox_english_count: int = OX_DEFAULT_ENGLISH_COUNT  # OX 영어 문항 수
 
 
 async def _get_teacher_gemini(teacher_id: int, db):
@@ -186,11 +182,10 @@ async def generate_ox(
     passage = db.create_passage(teacher_id, body.passage_text, body.title)
 
     user_message = build_ox_user_message(body.passage_text)
-    system_prompt = build_ox_system_prompt(body.ox_korean_count, body.ox_english_count)
-    result = await call_gemini_json(api_key, model or OX_MODEL, system_prompt, user_message)
+    result = await call_gemini_json(api_key, model or OX_MODEL, OX_SYSTEM_PROMPT, user_message)
 
     material = db.create_material(passage.id, "ox", json.dumps(result, ensure_ascii=False))
-    return {"passage_id": passage.id, "material_id": material.id, "result": result, "passage_text": body.passage_text}
+    return {"passage_id": passage.id, "material_id": material.id, "result": result}
 
 
 @router.post("/grammar-quiz")
@@ -241,7 +236,7 @@ async def generate_all(
         )
     if "ox" in selected:
         calls["ox"] = call_gemini_json(
-            api_key, model or OX_MODEL, build_ox_system_prompt(body.ox_korean_count, body.ox_english_count),
+            api_key, model or OX_MODEL, OX_SYSTEM_PROMPT,
             build_ox_user_message(body.passage_text),
         )
     if "grammar_quiz" in selected:
@@ -306,8 +301,7 @@ def download_material_pdf(material_id: int, teacher_id: int = Depends(get_curren
         steps = content.pop("_selected_steps", None)
         pdf_bytes = render_workbook_pdf(content, title=title, steps=steps)
     elif material.type == "ox":
-        passage_text = passage.raw_text if passage else None
-        pdf_bytes = render_ox_pdf(content, title=title, passage_text=passage_text)
+        pdf_bytes = render_ox_pdf(content, title=title)
     else:
         raise HTTPException(status_code=400, detail="이 자료 유형은 아직 PDF 다운로드를 지원하지 않아요.")
 

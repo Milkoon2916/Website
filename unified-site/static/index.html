@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학습자료 제작소</title>
+<link rel="stylesheet" href="/static/design-tokens.css">
+<style>
+  *{box-sizing:border-box;}
+  body{margin:0; padding:0 20px 80px;}
+  .wrap{max-width:960px; margin:0 auto;}
+
+  header{padding:56px 0 40px; display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap;}
+  header h1{font-size:28px; font-weight:800; margin:0 0 8px;}
+  header p{color:var(--text-muted); margin:0; font-size:15px;}
+
+  /* ---------- 로그인/계정 영역 ---------- */
+  .account-box{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; min-width:260px;
+  }
+  .account-box .state-loggedout, .account-box .state-loggedin{display:none;}
+  .account-box.is-loggedout .state-loggedout{display:block;}
+  .account-box.is-loggedin .state-loggedin{display:block;}
+
+  .tab-row{display:flex; gap:6px; margin-bottom:14px;}
+  .tab-btn{
+    flex:1; padding:8px 0; border:1px solid var(--border); background:var(--bg);
+    border-radius:8px; font-family:var(--font-body); font-size:13px; color:var(--text-muted);
+    cursor:pointer;
+  }
+  .tab-btn.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+
+  .field{margin-bottom:10px;}
+  .field label{display:block; font-size:12px; color:var(--text-muted); margin-bottom:4px;}
+  .field input{
+    width:100%; padding:9px 10px; border:1px solid var(--border-strong); border-radius:6px;
+    font-family:var(--font-body); font-size:14px; background:var(--bg); color:var(--text);
+  }
+  .field input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .btn-primary{
+    width:100%; padding:10px 0; background:var(--accent); color:#fff; border:none;
+    border-radius:8px; font-family:var(--font-body); font-size:14px; font-weight:700; cursor:pointer;
+  }
+  .btn-primary:hover{opacity:.9;}
+  .form-msg{font-size:12px; color:var(--danger); margin-top:8px; min-height:14px;}
+
+  .loggedin-name{font-size:14px; font-weight:700; margin:0 0 2px;}
+  .loggedin-sub{font-size:12px; color:var(--text-muted); margin:0 0 14px;}
+  .btn-secondary{
+    width:100%; padding:8px 0; background:var(--surface); color:var(--text-muted);
+    border:1px solid var(--border); border-radius:8px; font-family:var(--font-body);
+    font-size:13px; cursor:pointer;
+  }
+
+  /* ---------- 도구 카드 ---------- */
+  .grid{display:grid; grid-template-columns:repeat(2, 1fr); gap:16px; margin-top:8px;}
+  @media (max-width:680px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:24px; text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:10px;
+    transition:border-color .15s ease, transform .15s ease;
+  }
+  .card:hover{border-color:var(--border-strong); transform:translateY(-2px);}
+  .card .tag{
+    align-self:flex-start; font-size:11px; padding:3px 9px; border-radius:20px;
+    background:var(--accent-soft); color:var(--text-muted); font-weight:700;
+  }
+  .card h2{margin:0; font-size:18px; font-weight:800;}
+  .card p{margin:0; font-size:13.5px; color:var(--text-muted); line-height:1.55;}
+  .card .go{margin-top:auto; font-size:12.5px; color:var(--text-faint); font-weight:700;}
+
+  footer{margin-top:48px; font-size:12px; color:var(--text-faint); text-align:center;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>학습자료 제작소</h1>
+        <p>지문분석 · 워크북 · O/X · 단어장 퀴즈를 한 곳에서 만들고 관리해요.</p>
+      </div>
+
+      <div class="account-box is-loggedout" id="accountBox">
+        <div class="state-loggedout">
+          <div class="tab-row">
+            <button class="tab-btn active" data-tab="login">로그인</button>
+            <button class="tab-btn" data-tab="signup">회원가입</button>
+          </div>
+
+          <form id="loginForm" class="tab-panel">
+            <div class="field"><label>이름</label><input type="text" name="name" required></div>
+            <div class="field"><label>PIN</label><input type="password" name="pin" required></div>
+            <button type="submit" class="btn-primary">로그인</button>
+            <div class="form-msg" id="loginMsg"></div>
+          </form>
+
+          <form id="signupForm" class="tab-panel" style="display:none;">
+            <div class="field"><label>이름</label><input type="text" name="name" required></div>
+            <div class="field"><label>PIN</label><input type="password" name="pin" required></div>
+            <div class="field">
+              <label>Gemini API 키</label>
+              <input type="text" name="gemini_api_key" placeholder="AIza로 시작" required>
+              <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener"
+                 style="display:inline-block; margin-top:5px; font-size:11.5px; color:var(--accent); text-decoration:none;">
+                키가 없으신가요? Google AI Studio에서 무료로 발급받기 →
+              </a>
+            </div>
+            <button type="submit" class="btn-primary">가입하고 시작하기</button>
+            <div class="form-msg" id="signupMsg"></div>
+          </form>
+        </div>
+
+        <div class="state-loggedin">
+          <p class="loggedin-name" id="teacherName"></p>
+          <p class="loggedin-sub">로그인됨 · 모델: <span id="currentModel">-</span></p>
+          <button class="btn-secondary" id="settingsToggleBtn" style="margin-bottom:8px;">설정 (모델/키 변경)</button>
+          <button class="btn-secondary" id="logoutBtn">로그아웃</button>
+
+          <div id="settingsPanel" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+            <div class="field">
+              <label>Gemini 모델</label>
+              <select name="gemini_model" id="settingsModel" style="width:100%; padding:9px 10px; border:1px solid var(--border-strong); border-radius:6px; font-family:var(--font-body); font-size:14px; background:var(--bg);">
+                <option value="gemini-3.5-flash">gemini-3.5-flash (기본, 빠르고 저렴)</option>
+                <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (더 저렴, 간단한 작업용)</option>
+                <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (고성능)</option>
+                <option value="gemini-2.5-flash">gemini-2.5-flash (구버전, 안정적)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Gemini API 키 (바꿀 때만 입력)</label>
+              <input type="text" id="settingsKey" placeholder="비워두면 기존 키 유지">
+            </div>
+            <button type="button" class="btn-primary" id="settingsSaveBtn">저장</button>
+            <div class="form-msg" id="settingsMsg"></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <a class="card" href="/generate/" style="grid-column: 1 / -1; background:var(--accent); border-color:var(--accent);">
+        <span class="tag" style="background:rgba(255,255,255,.15); color:#fff;">추천</span>
+        <h2 style="color:#fff;">통합 생성 — 지문 하나로 전부</h2>
+        <p style="color:rgba(255,255,255,.75);">지문분석 · 워크북 · O/X · 목표어법 문제를 한 번에 만들고, 추출된 단어는 체크박스로 골라 바로 단어장에 담아요.</p>
+        <span class="go" style="color:rgba(255,255,255,.6);">시작하기 →</span>
+      </a>
+
+      <a class="card" href="/passage-analyzer/">
+        <span class="tag">PDF 출력</span>
+        <h2>지문분석기</h2>
+        <p>영어 지문을 붙여넣으면 문장별 구문분석, 번역, 목표 어법 노트를 자동으로 만들어줘요.</p>
+        <span class="go">분석하러 가기 →</span>
+      </a>
+
+      <a class="card" href="/workbook/">
+        <span class="tag">4단계 학습지</span>
+        <h2>워크북 메이커</h2>
+        <p>해석 · 빈칸 채우기 · 문장 순서 · 언스크램블, 4단계 워크북을 한 번에 만들어요.</p>
+        <span class="go">만들러 가기 →</span>
+      </a>
+
+      <a class="card" href="/comprehension/">
+        <span class="tag">웹 워크북</span>
+        <h2>O/X 리딩 워크북</h2>
+        <p>지문을 넣으면 한글 O/X 10문항, 영어 O/X 5문항짜리 내용일치 문제가 만들어져요.</p>
+        <span class="go">만들러 가기 →</span>
+      </a>
+
+      <a class="card" href="/grammar/">
+        <span class="tag">워드 다운로드</span>
+        <h2>어법 문제 만들기</h2>
+        <p>지문을 넣으면 단원 태그가 붙은 문법 테스트가 만들어지고, 편집 가능한 워드로 받을 수 있어요.</p>
+        <span class="go">만들러 가기 →</span>
+      </a>
+
+      <a class="card" href="/vocabulary/">
+        <span class="tag">학생 링크+코드</span>
+        <h2>단어장 퀴즈</h2>
+        <p>단어장을 만들고 학생에게 코드를 나눠주면, 로그인 없이 링크만으로 시험을 봐요.</p>
+        <span class="go">관리하러 가기 →</span>
+      </a>
+    </div>
+
+    <footer>선생님 계정으로 로그인하면 개인 Gemini API 키로 모든 도구를 이용할 수 있어요.</footer>
+  </div>
+
+<script>
+  const accountBox = document.getElementById('accountBox');
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.tab;
+      loginForm.style.display = tab === 'login' ? 'block' : 'none';
+      signupForm.style.display = tab === 'signup' ? 'block' : 'none';
+    });
+  });
+
+  async function checkSession(){
+    try{
+      const res = await fetch('/auth/me', {credentials:'include'});
+      if(res.ok){
+        const data = await res.json();
+        document.getElementById('teacherName').textContent = data.name + ' 선생님';
+        document.getElementById('currentModel').textContent = data.gemini_model || '-';
+        const modelSelect = document.getElementById('settingsModel');
+        if(modelSelect && data.gemini_model){
+          const hasOption = Array.from(modelSelect.options).some(o => o.value === data.gemini_model);
+          if(!hasOption){
+            const opt = document.createElement('option');
+            opt.value = data.gemini_model; opt.textContent = data.gemini_model + ' (현재 저장된 값)';
+            modelSelect.appendChild(opt);
+          }
+          modelSelect.value = data.gemini_model;
+        }
+        accountBox.classList.remove('is-loggedout');
+        accountBox.classList.add('is-loggedin');
+      }
+    }catch(e){ /* 비로그인 상태로 둠 */ }
+  }
+  checkSession();
+
+  document.getElementById('settingsToggleBtn')?.addEventListener('click', () => {
+    const panel = document.getElementById('settingsPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+
+  document.getElementById('settingsSaveBtn')?.addEventListener('click', async () => {
+    const msg = document.getElementById('settingsMsg');
+    msg.textContent = '저장 중...';
+    const gemini_model = document.getElementById('settingsModel').value;
+    const keyInput = document.getElementById('settingsKey').value.trim();
+    const body = { gemini_model };
+    if(keyInput) body.gemini_api_key = keyInput;
+    const res = await fetch('/auth/me/gemini', {
+      method:'PUT', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){
+      msg.textContent = '저장했어요!';
+      document.getElementById('settingsKey').value = '';
+      checkSession();
+    } else {
+      const err = await res.json().catch(()=>({}));
+      msg.textContent = err.detail || '저장에 실패했어요.';
+    }
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(loginForm));
+    const msg = document.getElementById('loginMsg');
+    msg.textContent = '';
+    const res = await fetch('/auth/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){ location.reload(); }
+    else { const err = await res.json(); msg.textContent = err.detail || '로그인에 실패했어요.'; }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(signupForm));
+    const msg = document.getElementById('signupMsg');
+    msg.textContent = '';
+    const res = await fetch('/auth/signup', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      credentials:'include', body: JSON.stringify(body)
+    });
+    if(res.ok){ location.reload(); }
+    else { const err = await res.json(); msg.textContent = err.detail || '가입에 실패했어요.'; }
+  });
+
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    await fetch('/auth/logout', {method:'POST', credentials:'include'});
+    location.reload();
+  });
+</script>
+</body>
+</html>
