@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_regular }}");
+    font-weight: 400;
+  }
+  @font-face{
+    font-family:"Nanum Gothic";
+    src: url("{{ font_bold }}");
+    font-weight: 700;
+  }
+
+  @page{
+    size: A4;
+    margin: 16mm 16mm 14mm;
+    @bottom-center{ content: counter(page) " / " counter(pages); font-family:"Nanum Gothic"; font-size:9px; color:#9A9A94; }
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    font-family:"Nanum Gothic", sans-serif; color:#1F1F1D; font-size:11.5px; line-height:1.7;
+    background:#FFFFFF; margin:0;
+  }
+
+  .step-page{ page-break-after: always; }
+  .step-page:last-child{ page-break-after: auto; }
+
+  .step-header{
+    display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:8px;
+    border-bottom:2px solid #3F4643;
+  }
+  .step-badge{
+    background:#3F4643; color:#fff; font-size:11px; font-weight:700; padding:5px 12px; border-radius:14px;
+  }
+  .step-title-text{font-size:13px; font-weight:700;}
+  .step-doc-title{font-size:10px; color:#4a4a45; margin-left:auto;}
+
+  .academy-header{ display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+  .academy-header img{ max-height:34px; max-width:130px; object-fit:contain; }
+  .academy-header .academy-name{ font-size:12px; font-weight:700; color:#17324d; }
+
+  .instruction{font-size:11px; color:#242422; font-weight:700; margin-bottom:12px;}
+
+  .unit-box{
+    border:1px solid #C9C9C4; border-style:dashed; border-radius:6px; padding:12px 14px;
+    margin-bottom:14px; page-break-inside:avoid; background:#FAFAF8;
+  }
+  .unit-num{color:#4a4a45; font-weight:700; margin-right:4px;}
+  .en-line{margin-bottom:2px;}
+  .ko-line{margin-bottom:2px; color:#3F4643;}
+
+  .blank-lines{margin-top:10px;}
+  .blank-line{border-bottom:1px solid #B8B8B3; height:16px; margin-bottom:8px;}
+
+  .word-order-box{ margin-bottom:8px; font-size:11.5px; letter-spacing:0.2px; }
+
+  .flawed-passage{ border:1px solid #C9C9C4; border-radius:6px; padding:14px; margin-bottom:16px; background:#FAFAF8; }
+  .flawed-passage .underline-item{ text-decoration:underline; text-decoration-color:#3F4643; font-weight:700; }
+  .answer-line{ display:flex; align-items:center; gap:8px; margin-bottom:10px; font-size:10.5px; }
+  .answer-line .field{ flex:1; border-bottom:1px solid #B8B8B3; height:14px; }
+
+  .order-passage-box{ border:1px solid #1F1F1D; border-radius:4px; padding:14px; margin-bottom:14px; }
+  .order-chunk{ margin-bottom:10px; }
+  .order-chunk .label{ font-weight:700; margin-right:6px; }
+
+  .writing-hint-bar{ background:#EEEFEC; color:#3F4643; font-size:10.5px; text-align:center; padding:5px; margin:8px 0 6px; border-radius:4px; }
+
+  /* 정답(답지) 페이지 — 항상 문제지 맨 뒤에 붙는다 */
+  .answer-key-page{ background:#FAFAF8; }
+  .answer-key-title{ font-size:16px; font-weight:700; margin:0 0 4px; }
+  .answer-key-subtitle{ font-size:10px; color:#6B6B66; margin:0 0 16px; }
+  .answer-section{ margin-bottom:16px; page-break-inside:avoid; }
+  .answer-section-title{
+    font-size:11.5px; font-weight:700; color:#fff; background:#3F4643;
+    display:inline-block; padding:3px 10px; border-radius:10px; margin-bottom:8px;
+  }
+  .answer-list{ font-size:10.5px; }
+  .answer-row{ display:flex; gap:6px; padding:3px 0; border-bottom:1px dotted #DCDCD8; }
+  .answer-row .a-num{ color:#4a4a45; font-weight:700; flex-shrink:0; width:20px; }
+  .answer-row .a-val{ flex:1; }
+  .answer-order{ display:flex; align-items:center; gap:6px; font-size:11px; }
+
+  /* Final Check */
+  .step-badge.final{ background:#2e9e6b; }
+  .fc-legend{ font-size:9px; color:#6B6B66; margin-bottom:10px; }
+  .fc-legend span{ margin-right:12px; }
+  table.fc-layout{ width:100%; border-collapse:collapse; table-layout:fixed; }
+  table.fc-layout td.fc-en{ width:64%; vertical-align:top; padding:10px 10px 10px 0; border-bottom:1px solid #E3E3E0; }
+  table.fc-layout td.fc-ko{ width:36%; vertical-align:top; padding:10px 0 10px 10px; border-left:1px solid #E3E3E0; border-bottom:1px solid #E3E3E0; color:#242422; font-size:10px; }
+  .fc-block-num{ display:inline-block; background:#3F4643; color:#fff; width:15px; height:15px; text-align:center; line-height:15px; font-size:9px; border-radius:50%; margin-right:5px; }
+  .fc-num{ font-size:7.5px; color:#9A9A94; vertical-align:super; margin-left:1px; }
+  .fc-blank-label{ color:#D3222A; font-weight:700; font-size:9px; vertical-align:middle; }
+  .fc-blank-line{ display:inline-block; border-bottom:1px solid #1F1F1D; min-width:14px; margin:0 1px; }
+  .fc-choice{ font-weight:700; }
+  .fc-order-label{ color:#2E9E6B; font-weight:700; font-size:9px; }
+  .fc-writing{ font-weight:700; text-decoration:underline; }
+  .fc-answer-val .type-tag{ display:inline-block; font-size:7.5px; font-weight:700; color:#fff; padding:1px 5px; border-radius:8px; margin-right:5px; }
+  .fc-answer-val .type-blank{ background:#D3222A; }
+  .fc-answer-val .type-choice{ background:#2266CC; }
+  .fc-answer-val .type-order{ background:#2E9E6B; }
+  .fc-answer-val .type-writing{ background:#8B3FA0; }
+</style>
+</head>
+<body>
+
+{% if academy_name or academy_logo %}
+<div class="academy-header">
+  {% if academy_logo %}<img src="{{ academy_logo }}" alt="학원 로고">{% endif %}
+  {% if academy_name %}<span class="academy-name">{{ academy_name }}</span>{% endif %}
+</div>
+{% endif %}
+
+{% if 'step2' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 1</span>
+    <span class="step-title-text">빈칸 완성하기 (우리말)</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">영문을 보고 우리말 해석의 빈칸을 완성해 보세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="en-line">{{ u.num }}. {{ u.en }}</div>
+    <div class="ko-line">{{ u.ko_blanked }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step3' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 2</span>
+    <span class="step-title-text">빈칸 완성하기 (영문)</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">우리말 해석을 보고 영문의 빈칸을 완성해 보세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
+    <div class="en-line">{{ u.en_blanked }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step4' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 3</span>
+    <span class="step-title-text">해석 연습하기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">문장 전체의 자연스러운 해석을 써 보세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="en-line">{{ u.num }}. {{ u.en }}</div>
+    <div class="blank-lines"><div class="blank-line"></div><div class="blank-line"></div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step5' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 4</span>
+    <span class="step-title-text">동사형 연습하기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">괄호 안에 주어진 단어를 알맞게 고쳐 쓰세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
+    <div class="en-line">{{ u.verb_prompt_en }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step6' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 5</span>
+    <span class="step-title-text">어법·어휘 고르기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">괄호 안에서 옳은 어법과 어휘를 골라 보세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
+    <div class="en-line">{{ u.choice_prompt_en }}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step7' in steps and result.flawed_text %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 6</span>
+    <span class="step-title-text">어색한 곳 찾기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">밑줄 친 부분 중 어법상 어색한 것을 찾아 알맞게 고쳐 쓰세요.</div>
+  <div class="flawed-passage">
+    {% for item in result.flawed_text.underlined_items %}<span class="underline-item">{{ item.text }}</span>{% if not loop.last %} {% endif %}{% endfor %}
+  </div>
+  {% for item in result.flawed_text.underlined_items if item.is_wrong %}
+  <div class="answer-line">({{ loop.index }}) <span class="field"></span> → <span class="field"></span></div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step8' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 7</span>
+    <span class="step-title-text">순서 배열하기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">단어를 배열하여 문장을 완성해 보세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
+    <div class="word-order-box">{{ u.word_order_words | join(' / ') }}</div>
+    <div class="blank-line"></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'step9' in steps and result.paragraph_order %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 8</span>
+    <span class="step-title-text">문단 배열하기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">다음 문단을 흐름상 알맞게 배열해 보세요.</div>
+  <div class="order-passage-box">
+    <div class="en-line" style="margin-bottom:10px;">{{ result.paragraph_order.intro_en }}</div>
+    {% for c in result.paragraph_order.chunks %}
+    <div class="order-chunk"><span class="label">({{ c.label }})</span>{{ c.text }}</div>
+    {% endfor %}
+  </div>
+  <div class="answer-line">
+    {% for c in result.paragraph_order.chunks %}<span class="field" style="flex:0 0 60px; text-align:center;"></span>{% if not loop.last %}→{% endif %}{% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if 'step10' in steps %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge">STEP 9</span>
+    <span class="step-title-text">영작 연습하기</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">우리말과 같은 뜻이 되도록 주어진 단어를 순서대로 사용하여 영작하세요.</div>
+  {% for u in result.units %}
+  <div class="unit-box">
+    <div class="ko-line">{{ u.num }}. {{ u.ko }}</div>
+    <div class="writing-hint-bar">{{ u.given_words_for_writing | join(', ') }}</div>
+    <div class="blank-lines"><div class="blank-line"></div><div class="blank-line"></div></div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if 'final_check' in steps and result.final_check %}
+<div class="step-page">
+  <div class="step-header">
+    <span class="step-badge final">FINAL CHECK</span>
+    <span class="step-title-text">최종 점검</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <div class="instruction">영문과 해석을 읽으며 빈칸·어법·순서배열·영작을 한 번에 점검해 보세요.</div>
+  <div class="fc-legend">
+    <span class="fc-blank-label">빈칸</span>어휘/문법 빈칸
+    <span>[A / B] 어법·어휘 고르기</span>
+    <span class="fc-order-label">순서배열</span>단어 배열
+    <span class="fc-writing">밑줄</span>영작
+  </div>
+
+  <table class="fc-layout">
+    {% for b in result.final_check.blocks %}
+    <tr>
+      <td class="fc-en">
+        <span class="fc-block-num">{{ b.num }}</span>
+        {%- for seg in b.segments %}
+          {%- if seg.type == "text" %}{{ seg.text }}
+          {%- elif seg.type == "blank" %} <span class="fc-blank-label">빈칸</span>{% for _ in range(seg.word_count or 1) %}<span class="fc-blank-line">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>{% endfor %}<span class="fc-num">{{ seg.num }})</span>
+          {%- elif seg.type == "choice" %} <span class="fc-choice">[{{ seg.choices[0] }} / {{ seg.choices[1] }}]</span><span class="fc-num">{{ seg.num }})</span>
+          {%- elif seg.type == "order" %} <span class="fc-order-label">순서배열</span>({{ seg.words | join(', ') }})<span class="fc-num">{{ seg.num }})</span>
+          {%- elif seg.type == "writing" %} <span class="fc-writing">{{ seg.prompt_ko }}</span>({{ seg.given_words | join(', ') }})<span class="fc-num">{{ seg.num }})</span>
+          {%- endif %}
+        {%- endfor %}
+      </td>
+      <td class="fc-ko">{{ b.ko }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="step-page answer-key-page">
+  <div class="step-header">
+    <span class="step-badge">정답</span>
+    <span class="step-title-text">정답 및 해설</span>
+    <span class="step-doc-title">{{ title }}</span>
+  </div>
+  <p class="answer-key-subtitle">아래는 채점용 정답이에요. 학생용 문제지와 분리해서 선생님만 보관하세요.</p>
+
+  {% if 'step2' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 1. 빈칸 완성하기 (우리말)</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.ko }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step3' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 2. 빈칸 완성하기 (영문)</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.en }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step4' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 3. 해석 연습하기</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.ko }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step5' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 4. 동사형 연습하기</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.en }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step6' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 5. 어법·어휘 고르기</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.choice_answer }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step7' in steps and result.flawed_text %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 6. 어색한 곳 찾기</div>
+    <div class="answer-list">
+      {% for item in result.flawed_text.underlined_items if item.is_wrong %}
+      <div class="answer-row"><span class="a-num">({{ loop.index }})</span><span class="a-val">{{ item.text }} → {{ item.correction }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step8' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 7. 순서 배열하기</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.word_order_answer }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step9' in steps and result.paragraph_order %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 8. 문단 배열하기</div>
+    <div class="answer-order">
+      {% for label in result.paragraph_order.correct_order %}<span>{{ label }}</span>{% if not loop.last %}→{% endif %}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'step10' in steps %}
+  <div class="answer-section">
+    <div class="answer-section-title">STEP 9. 영작 연습하기 (예시 답안)</div>
+    <div class="answer-list">
+      {% for u in result.units %}<div class="answer-row"><span class="a-num">{{ u.num }}.</span><span class="a-val">{{ u.en }}</span></div>{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if 'final_check' in steps and result.final_check %}
+  <div class="answer-section">
+    <div class="answer-section-title">FINAL CHECK. 최종 점검</div>
+    <div class="answer-list">
+      {% for b in result.final_check.blocks %}{% for seg in b.segments %}{% if seg.type != "text" %}
+      <div class="answer-row fc-answer-val">
+        <span class="a-num">{{ seg.num }})</span>
+        <span class="a-val">
+          {%- if seg.type == "blank" %}<span class="type-tag type-blank">빈칸</span>{{ seg.answer }}
+          {%- elif seg.type == "choice" %}<span class="type-tag type-choice">어법·어휘</span>{{ seg.answer }}
+          {%- elif seg.type == "order" %}<span class="type-tag type-order">순서배열</span>{{ seg.answer }}
+          {%- elif seg.type == "writing" %}<span class="type-tag type-writing">영작</span>{{ seg.answer }}
+          {%- endif -%}
+        </span>
+      </div>
+      {% endif %}{% endfor %}{% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+</body>
+</html>
